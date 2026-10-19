@@ -1,0 +1,482 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Installer Smart Heat Manager",
+        "data": {
+          "pump_entity": "Entité climate de la pompe à chaleur"
+        },
+        "description": "L’installation démarre en observation. Choisir une entité existante LG. Les pièces et fonctionnalités se configurent ensuite dans le menu."
+      },
+      "system": {
+        "title": "Pompe à chaleur et surveillance",
+        "data": {
+          "pump_entity": "Entité climate de la pompe à chaleur",
+          "pump_mode": "Mode natif à utiliser",
+          "pump_power_entity": "Puissance électrique PAC (W ou kW)",
+          "water_in_entity": "Température entrée d’eau",
+          "water_out_entity": "Température sortie d’eau",
+          "protection_entity": "Protection active si ON (défaut, dégivrage, etc.)"
+        }
+      },
+      "presence": {
+        "title": "Présence et dérogations",
+        "data": {
+          "presence_enabled": "Utiliser la présence",
+          "presence_entity": "Présence du logement",
+          "presence_delay": "Stabilité avant changement de présence",
+          "override_minutes": "Durée des dérogations et modes temporaires"
+        }
+      },
+      "tempo": {
+        "title": "Tempo EDF",
+        "data": {
+          "tempo_enabled": "Activer Tempo",
+          "tempo_today_entity": "Couleur applicable aujourd’hui",
+          "tempo_tomorrow_entity": "Couleur demain",
+          "tempo_unknown_blocks": "Bloquer en HP si couleur inconnue",
+          "preheat_enabled": "Anticiper une journée rouge",
+          "preheat_start": "Début du préchauffage avant 6 h",
+          "preheat_delta": "Augmentation avant rouge (bornée par consigne solaire)",
+          "white_delta": "Correction de consigne jour blanc",
+          "red_delta": "Correction de consigne jour rouge"
+        }
+      },
+      "solar": {
+        "title": "Photovoltaïque",
+        "data": {
+          "solar_enabled": "Activer le préchauffage solaire",
+          "production_entity": "Production photovoltaïque",
+          "house_entity": "Consommation totale maison",
+          "grid_entity": "Bilan réseau signé (prioritaire)",
+          "grid_export_positive": "Le réseau est positif en injection",
+          "house_includes_pump": "La consommation maison inclut déjà la PAC",
+          "solar_red_allowed": "Autoriser le solaire pendant les HP rouges",
+          "solar_start": "Seuil électrique de démarrage solaire",
+          "solar_hold": "Seuil de maintien solaire",
+          "solar_margin": "Marge de puissance",
+          "solar_hysteresis": "Hystérésis de puissance",
+          "solar_delay": "Durée de surplus avant activation",
+          "solar_min_on": "Durée minimale du mode solaire",
+          "solar_stop_delay": "Durée de déficit avant fin du solaire"
+        }
+      },
+      "safety": {
+        "title": "Sécurités et autorisation de pilotage",
+        "data": {
+          "control_enabled": "Permettre l’armement des commandes physiques",
+          "hydraulic_confirmed": "Débit garanti indépendamment des têtes et du logiciel (validation installateur)",
+          "exclusive_confirmed": "VTherm et tous les anciens pilotes sont désactivés",
+          "capabilities_confirmed": "Modes LG et comportement des actionneurs testés sur l’installation",
+          "min_on": "Durée minimale du mode chauffage PAC",
+          "min_off": "Durée minimale avant réactivation PAC",
+          "demand_delay": "Demande stable avant démarrage",
+          "drain_delay": "Circulation résiduelle après arrêt confirmé",
+          "command_interval": "Intervalle minimal entre commandes identiques",
+          "ack_timeout": "Délai de confirmation d’un ordre",
+          "sensor_max_age": "Âge maximal des données reçues",
+          "water_max": "Seuil haut d’eau : suspendre les commandes"
+        },
+        "description": "Le débit doit être garanti par l’hydraulique indépendamment des têtes. Les commandes reprennent uniquement après armement explicite, à chaque redémarrage. Une suspension conserve les états physiques ; les protections natives restent indispensables."
+      },
+      "room": {
+        "title": "Paramètres de la pièce",
+        "data": {
+          "name": "Nom de la pièce",
+          "sensor": "Sonde externe de référence",
+          "actuators": "Têtes climate / ouvertures number 0–100 % / valves positionnables",
+          "actuator_notes": "Marques, modèles et remarques de calibration (facultatif)",
+          "present": "Consigne présence",
+          "absent": "Consigne absence",
+          "night": "Consigne nuit",
+          "holiday": "Consigne vacances",
+          "manual": "Consigne du mode manuel",
+          "solar": "Température maximale solaire",
+          "frost": "Température minimale hors-gel",
+          "valve_hot": "Consigne tête en demande (têtes climate)",
+          "valve_cold": "Consigne tête hors demande (têtes climate)",
+          "hysteresis": "Hystérésis de température",
+          "gain": "Ouverture par degré d’écart (number/valve)",
+          "enabled": "Chauffage de la pièce activé",
+          "solar_enabled": "Activer le préchauffage solaire"
+        },
+        "description": "La régulation utilise la sonde externe. Les têtes climate reçoivent une consigne haute/basse, à calibrer ; cette consigne ne confirme pas une ouverture physique. Les number doivent représenter une ouverture 0–100 %."
+      },
+      "edit_room": {
+        "title": "Modifier une pièce",
+        "data": {
+          "room": "Pièce"
+        }
+      },
+      "delete_room": {
+        "title": "Supprimer une pièce",
+        "data": {
+          "room": "Pièce"
+        },
+        "description": "La pièce choisie sera retirée lors de l’enregistrement final."
+      },
+      "finish": {
+        "title": "Enregistrer la configuration",
+        "data": {},
+        "description": "Corrigez les paramètres indiqués. Validez ce formulaire pour revenir au menu."
+      },
+      "init": {
+        "title": "Options",
+        "data": {}
+      },
+      "menu": {
+        "title": "Configuration",
+        "menu_options": {
+          "system": "Pompe à chaleur et surveillance",
+          "presence": "Présence et dérogations",
+          "tempo": "Tempo EDF",
+          "solar": "Photovoltaïque",
+          "safety": "Sécurités et autorisation de pilotage",
+          "rooms": "Gestion des pièces",
+          "finish": "Enregistrer la configuration"
+        }
+      },
+      "rooms": {
+        "title": "Gestion des pièces",
+        "menu_options": {
+          "add_room": "Ajouter une pièce",
+          "edit_room": "Modifier une pièce",
+          "delete_room": "Supprimer une pièce",
+          "menu": "Configuration"
+        }
+      }
+    },
+    "error": {
+      "room_required": "Ajouter au moins une pièce, avec sonde et actionneurs.",
+      "solar_sources_required": "Choisir un bilan réseau ou le couple production/consommation.",
+      "presence_required": "Choisir l’entité de présence.",
+      "tempo_required": "Choisir l’entité de couleur du jour.",
+      "solar_thresholds_invalid": "Le maintien doit être inférieur ou égal au démarrage, et l’hystérésis au maintien.",
+      "confirmations_required": "Confirmer le débit indépendant, l’arrêt des anciens pilotes et les capacités testées avant d’autoriser les commandes.",
+      "pump_mode_not_supported": "Choisir heat ou auto.",
+      "temperature_invalid": "Vérifier les températures, le hors-gel, l’hystérésis et les consignes basse/haute des têtes.",
+      "duplicate_actuator": "Un actionneur ne peut appartenir qu’à une pièce et ne peut être la PAC.",
+      "sensor_is_actuator": "La sonde externe doit être distincte des actionneurs.",
+      "recursive_entity": "Une entité créée par Smart Heat Manager ne peut être utilisée comme entrée."
+    },
+    "abort": {
+      "single_instance_allowed": "Une seule installation est autorisée."
+    }
+  },
+  "options": {
+    "step": {
+      "user": {
+        "title": "Installer Smart Heat Manager",
+        "data": {
+          "pump_entity": "Entité climate de la pompe à chaleur"
+        },
+        "description": "L’installation démarre en observation. Choisir une entité existante LG. Les pièces et fonctionnalités se configurent ensuite dans le menu."
+      },
+      "system": {
+        "title": "Pompe à chaleur et surveillance",
+        "data": {
+          "pump_entity": "Entité climate de la pompe à chaleur",
+          "pump_mode": "Mode natif à utiliser",
+          "pump_power_entity": "Puissance électrique PAC (W ou kW)",
+          "water_in_entity": "Température entrée d’eau",
+          "water_out_entity": "Température sortie d’eau",
+          "protection_entity": "Protection active si ON (défaut, dégivrage, etc.)"
+        }
+      },
+      "presence": {
+        "title": "Présence et dérogations",
+        "data": {
+          "presence_enabled": "Utiliser la présence",
+          "presence_entity": "Présence du logement",
+          "presence_delay": "Stabilité avant changement de présence",
+          "override_minutes": "Durée des dérogations et modes temporaires"
+        }
+      },
+      "tempo": {
+        "title": "Tempo EDF",
+        "data": {
+          "tempo_enabled": "Activer Tempo",
+          "tempo_today_entity": "Couleur applicable aujourd’hui",
+          "tempo_tomorrow_entity": "Couleur demain",
+          "tempo_unknown_blocks": "Bloquer en HP si couleur inconnue",
+          "preheat_enabled": "Anticiper une journée rouge",
+          "preheat_start": "Début du préchauffage avant 6 h",
+          "preheat_delta": "Augmentation avant rouge (bornée par consigne solaire)",
+          "white_delta": "Correction de consigne jour blanc",
+          "red_delta": "Correction de consigne jour rouge"
+        }
+      },
+      "solar": {
+        "title": "Photovoltaïque",
+        "data": {
+          "solar_enabled": "Activer le préchauffage solaire",
+          "production_entity": "Production photovoltaïque",
+          "house_entity": "Consommation totale maison",
+          "grid_entity": "Bilan réseau signé (prioritaire)",
+          "grid_export_positive": "Le réseau est positif en injection",
+          "house_includes_pump": "La consommation maison inclut déjà la PAC",
+          "solar_red_allowed": "Autoriser le solaire pendant les HP rouges",
+          "solar_start": "Seuil électrique de démarrage solaire",
+          "solar_hold": "Seuil de maintien solaire",
+          "solar_margin": "Marge de puissance",
+          "solar_hysteresis": "Hystérésis de puissance",
+          "solar_delay": "Durée de surplus avant activation",
+          "solar_min_on": "Durée minimale du mode solaire",
+          "solar_stop_delay": "Durée de déficit avant fin du solaire"
+        }
+      },
+      "safety": {
+        "title": "Sécurités et autorisation de pilotage",
+        "data": {
+          "control_enabled": "Permettre l’armement des commandes physiques",
+          "hydraulic_confirmed": "Débit garanti indépendamment des têtes et du logiciel (validation installateur)",
+          "exclusive_confirmed": "VTherm et tous les anciens pilotes sont désactivés",
+          "capabilities_confirmed": "Modes LG et comportement des actionneurs testés sur l’installation",
+          "min_on": "Durée minimale du mode chauffage PAC",
+          "min_off": "Durée minimale avant réactivation PAC",
+          "demand_delay": "Demande stable avant démarrage",
+          "drain_delay": "Circulation résiduelle après arrêt confirmé",
+          "command_interval": "Intervalle minimal entre commandes identiques",
+          "ack_timeout": "Délai de confirmation d’un ordre",
+          "sensor_max_age": "Âge maximal des données reçues",
+          "water_max": "Seuil haut d’eau : suspendre les commandes"
+        },
+        "description": "Le débit doit être garanti par l’hydraulique indépendamment des têtes. Les commandes reprennent uniquement après armement explicite, à chaque redémarrage. Une suspension conserve les états physiques ; les protections natives restent indispensables."
+      },
+      "room": {
+        "title": "Paramètres de la pièce",
+        "data": {
+          "name": "Nom de la pièce",
+          "sensor": "Sonde externe de référence",
+          "actuators": "Têtes climate / ouvertures number 0–100 % / valves positionnables",
+          "actuator_notes": "Marques, modèles et remarques de calibration (facultatif)",
+          "present": "Consigne présence",
+          "absent": "Consigne absence",
+          "night": "Consigne nuit",
+          "holiday": "Consigne vacances",
+          "manual": "Consigne du mode manuel",
+          "solar": "Température maximale solaire",
+          "frost": "Température minimale hors-gel",
+          "valve_hot": "Consigne tête en demande (têtes climate)",
+          "valve_cold": "Consigne tête hors demande (têtes climate)",
+          "hysteresis": "Hystérésis de température",
+          "gain": "Ouverture par degré d’écart (number/valve)",
+          "enabled": "Chauffage de la pièce activé",
+          "solar_enabled": "Activer le préchauffage solaire"
+        },
+        "description": "La régulation utilise la sonde externe. Les têtes climate reçoivent une consigne haute/basse, à calibrer ; cette consigne ne confirme pas une ouverture physique. Les number doivent représenter une ouverture 0–100 %."
+      },
+      "edit_room": {
+        "title": "Modifier une pièce",
+        "data": {
+          "room": "Pièce"
+        }
+      },
+      "delete_room": {
+        "title": "Supprimer une pièce",
+        "data": {
+          "room": "Pièce"
+        },
+        "description": "La pièce choisie sera retirée lors de l’enregistrement final."
+      },
+      "finish": {
+        "title": "Enregistrer la configuration",
+        "data": {},
+        "description": "Corrigez les paramètres indiqués. Validez ce formulaire pour revenir au menu."
+      },
+      "init": {
+        "title": "Options",
+        "data": {}
+      },
+      "menu": {
+        "title": "Configuration",
+        "menu_options": {
+          "system": "Pompe à chaleur et surveillance",
+          "presence": "Présence et dérogations",
+          "tempo": "Tempo EDF",
+          "solar": "Photovoltaïque",
+          "safety": "Sécurités et autorisation de pilotage",
+          "rooms": "Gestion des pièces",
+          "finish": "Enregistrer la configuration"
+        }
+      },
+      "rooms": {
+        "title": "Gestion des pièces",
+        "menu_options": {
+          "add_room": "Ajouter une pièce",
+          "edit_room": "Modifier une pièce",
+          "delete_room": "Supprimer une pièce",
+          "menu": "Configuration"
+        }
+      }
+    },
+    "error": {
+      "room_required": "Ajouter au moins une pièce, avec sonde et actionneurs.",
+      "solar_sources_required": "Choisir un bilan réseau ou le couple production/consommation.",
+      "presence_required": "Choisir l’entité de présence.",
+      "tempo_required": "Choisir l’entité de couleur du jour.",
+      "solar_thresholds_invalid": "Le maintien doit être inférieur ou égal au démarrage, et l’hystérésis au maintien.",
+      "confirmations_required": "Confirmer le débit indépendant, l’arrêt des anciens pilotes et les capacités testées avant d’autoriser les commandes.",
+      "pump_mode_not_supported": "Choisir heat ou auto.",
+      "temperature_invalid": "Vérifier les températures, le hors-gel, l’hystérésis et les consignes basse/haute des têtes.",
+      "duplicate_actuator": "Un actionneur ne peut appartenir qu’à une pièce et ne peut être la PAC.",
+      "sensor_is_actuator": "La sonde externe doit être distincte des actionneurs.",
+      "recursive_entity": "Une entité créée par Smart Heat Manager ne peut être utilisée comme entrée."
+    }
+  },
+  "selector": {
+    "pump_mode": {
+      "options": {
+        "heat": "Chauffage",
+        "auto": "Auto natif (valider son comportement)"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "decision": {
+        "name": "Décision",
+        "state": {
+          "fault": "Défaut",
+          "paused": "Automatismes suspendus",
+          "frost": "Hors-gel",
+          "tempo_blocked": "Restriction Tempo",
+          "heating": "Demande normale",
+          "solar_heating": "Demande solaire",
+          "idle": "Repos"
+        }
+      },
+      "reason": {
+        "name": "Motif"
+      },
+      "controller": {
+        "name": "État du pilotage",
+        "state": {
+          "observation": "Observation",
+          "command_fault": "Ordre non confirmé",
+          "suspended": "Commandes suspendues",
+          "minimum_on": "Durée minimale de marche",
+          "minimum_off": "Durée minimale d’arrêt",
+          "running": "Mode chauffage actif",
+          "starting": "Démarrage",
+          "stopping": "Arrêt en cours",
+          "idle": "Repos",
+          "opening_emitters": "Attente des émetteurs",
+          "draining": "Circulation résiduelle"
+        }
+      },
+      "surplus": {
+        "name": "Surplus réseau net"
+      },
+      "solar_budget": {
+        "name": "Puissance disponible pour la PAC après marge"
+      },
+      "pump_power": {
+        "name": "Puissance électrique PAC"
+      },
+      "tempo": {
+        "name": "Couleur Tempo",
+        "state": {
+          "red": "Rouge",
+          "white": "Blanc",
+          "blue": "Bleu",
+          "unknown": "Inconnue"
+        }
+      },
+      "demand_count": {
+        "name": "Pièces en demande"
+      }
+    },
+    "binary_sensor": {
+      "heat_requested": {
+        "name": "Demande globale"
+      },
+      "tempo_blocked": {
+        "name": "Restriction Tempo"
+      },
+      "solar_active": {
+        "name": "Préchauffage solaire actif"
+      },
+      "fault": {
+        "name": "Défaut"
+      },
+      "room_demand": {
+        "name": "Demande de chauffage"
+      }
+    },
+    "switch": {
+      "armed": {
+        "name": "Armement des commandes (session)"
+      },
+      "automation_enabled": {
+        "name": "Automatismes"
+      },
+      "solar_enabled": {
+        "name": "Optimisation solaire"
+      },
+      "force": {
+        "name": "Forçage général temporaire"
+      },
+      "tempo_bypass": {
+        "name": "Dérogation Tempo temporaire"
+      },
+      "room_solar": {
+        "name": "Préchauffage solaire"
+      }
+    },
+    "number": {
+      "solar_start": {
+        "name": "Seuil de démarrage solaire"
+      },
+      "solar_hold": {
+        "name": "Seuil de maintien solaire"
+      },
+      "solar_margin": {
+        "name": "Marge solaire"
+      },
+      "override_minutes": {
+        "name": "Durée des dérogations"
+      },
+      "solar_target": {
+        "name": "Consigne maximale solaire"
+      }
+    },
+    "select": {
+      "mode": {
+        "name": "Mode général temporaire",
+        "state": {
+          "auto": "Automatique",
+          "present": "Présent",
+          "absent": "Absent",
+          "night": "Nuit",
+          "holiday": "Vacances",
+          "manual": "Manuel"
+        }
+      }
+    },
+    "button": {
+      "reset_fault": {
+        "name": "Acquitter le défaut (désarme)"
+      },
+      "evaluate": {
+        "name": "Recalculer"
+      }
+    },
+    "climate": {
+      "climate": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "Automatique",
+              "present": "Présent",
+              "absent": "Absent",
+              "night": "Nuit",
+              "holiday": "Vacances",
+              "manual": "Manuel"
+            }
+          }
+        }
+      }
+    }
+  }
+}

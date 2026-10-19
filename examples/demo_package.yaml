@@ -1,0 +1,73 @@
+# Optional package for an isolated Home Assistant test instance only.
+input_number:
+  shm_demo_room_temperature:
+    name: SHM Demo Température Salon
+    min: 5
+    max: 35
+    step: 0.1
+    initial: 19
+    unit_of_measurement: °C
+  shm_demo_pump_temperature:
+    name: SHM Demo Température PAC
+    min: 5
+    max: 35
+    initial: 18
+    unit_of_measurement: °C
+  shm_demo_production:
+    name: SHM Demo Production
+    min: 0
+    max: 9000
+    initial: 5000
+    unit_of_measurement: W
+  shm_demo_house:
+    name: SHM Demo Maison
+    min: 0
+    max: 15000
+    initial: 1500
+    unit_of_measurement: W
+  shm_demo_grid:
+    name: SHM Demo Réseau
+    min: -9000
+    max: 15000
+    initial: -3500
+    unit_of_measurement: W
+  shm_demo_pump_power:
+    name: SHM Demo PAC électrique
+    min: 0
+    max: 6000
+    initial: 0
+    unit_of_measurement: W
+input_boolean:
+  shm_demo_presence:
+    name: SHM Demo Présence
+    initial: true
+  shm_demo_pump_relay:
+    name: SHM Demo Relais PAC fictif
+  shm_demo_head_relay:
+    name: SHM Demo Relais tête fictif
+input_select:
+  shm_demo_today:
+    name: SHM Demo Tempo aujourd'hui
+    options: [Bleu, Blanc, Rouge]
+  shm_demo_tomorrow:
+    name: SHM Demo Tempo demain
+    options: [Bleu, Blanc, Rouge]
+climate:
+  - platform: generic_thermostat
+    name: SHM Demo PAC
+    unique_id: shm_demo_pump
+    heater: input_boolean.shm_demo_pump_relay
+    target_sensor: input_number.shm_demo_pump_temperature
+    min_temp: 5
+    max_temp: 35
+    target_temp: 20
+    initial_hvac_mode: 'off'
+  - platform: generic_thermostat
+    name: SHM Demo Tête Salon
+    unique_id: shm_demo_head
+    heater: input_boolean.shm_demo_head_relay
+    target_sensor: input_number.shm_demo_room_temperature
+    min_temp: 5
+    max_temp: 35
+    target_temp: 20
+    initial_hvac_mode: 'off'

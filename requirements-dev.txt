@@ -1,0 +1,5 @@
+pytest>=8.3,<10
+ruff>=0.9,<1
+voluptuous>=0.15,<1
+# For actual HA tests on Linux with a supported Python version:
+# pip install pytest-homeassistant-custom-component

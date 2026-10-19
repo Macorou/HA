@@ -1,0 +1,57 @@
+"""Configuration keys and conservative defaults (seconds, watts, Celsius)."""
+
+DOMAIN = "smart_heat_manager"
+VERSION = "0.1.0"
+PLATFORMS = ["climate", "sensor", "binary_sensor", "switch", "number", "select", "button"]
+MODES = ["auto", "present", "absent", "night", "holiday", "manual"]
+DEFAULTS = {
+    "pump_mode": "heat",
+    "presence_enabled": False,
+    "presence_delay": 300,
+    "tempo_enabled": False,
+    "tempo_unknown_blocks": True,
+    "preheat_enabled": False,
+    "preheat_start": 2,
+    "preheat_delta": 1.0,
+    "white_delta": 0.0,
+    "red_delta": 0.0,
+    "solar_enabled": False,
+    "grid_export_positive": False,
+    "house_includes_pump": True,
+    "solar_red_allowed": False,
+    "solar_start": 2000.0,
+    "solar_hold": 1000.0,
+    "solar_margin": 200.0,
+    "solar_hysteresis": 100.0,
+    "solar_delay": 300,
+    "solar_min_on": 900,
+    "solar_stop_delay": 300,
+    "min_on": 1200,
+    "min_off": 600,
+    "demand_delay": 120,
+    "drain_delay": 180,
+    "command_interval": 60,
+    "ack_timeout": 180,
+    "sensor_max_age": 3600,
+    "override_minutes": 120,
+    "control_enabled": False,
+    "hydraulic_confirmed": False,
+    "exclusive_confirmed": False,
+    "capabilities_confirmed": False,
+    "water_max": 60.0,
+}
+ROOM_DEFAULTS = {
+    "present": 20.0,
+    "absent": 17.0,
+    "night": 18.0,
+    "holiday": 12.0,
+    "manual": 20.0,
+    "solar": 22.0,
+    "frost": 7.0,
+    "hysteresis": 0.3,
+    "enabled": True,
+    "solar_enabled": True,
+    "valve_hot": 30.0,
+    "valve_cold": 7.0,
+    "gain": 60.0,
+}

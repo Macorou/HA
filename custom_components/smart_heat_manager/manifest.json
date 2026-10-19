@@ -1,0 +1,14 @@
+{
+  "domain": "smart_heat_manager",
+  "name": "Smart Heat Manager",
+  "codeowners": ["@Macorou"],
+  "config_flow": true,
+  "dependencies": ["persistent_notification"],
+  "documentation": "https://github.com/Macorou/HA#readme",
+  "integration_type": "hub",
+  "iot_class": "calculated",
+  "issue_tracker": "https://github.com/Macorou/HA/issues",
+  "requirements": [],
+  "single_config_entry": true,
+  "version": "0.1.0"
+}

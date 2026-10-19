@@ -1,0 +1,1 @@
+"""Smart Heat Manager tests."""

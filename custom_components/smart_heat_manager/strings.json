@@ -1,0 +1,482 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Smart Heat Manager",
+        "data": {
+          "pump_entity": "Heat pump climate entity"
+        },
+        "description": "Installation starts in observation. Select an existing LG entity, then configure rooms and features."
+      },
+      "system": {
+        "title": "Heat pump and monitoring",
+        "data": {
+          "pump_entity": "Heat pump climate entity",
+          "pump_mode": "Native heating mode",
+          "pump_power_entity": "Heat pump electrical power (W or kW)",
+          "water_in_entity": "Inlet water temperature",
+          "water_out_entity": "Outlet water temperature",
+          "protection_entity": "Protection signal (ON inhibits commands)"
+        }
+      },
+      "presence": {
+        "title": "Occupancy and overrides",
+        "data": {
+          "presence_enabled": "Enable occupancy",
+          "presence_entity": "House occupancy",
+          "presence_delay": "Occupancy debounce",
+          "override_minutes": "Override and temporary mode duration"
+        }
+      },
+      "tempo": {
+        "title": "EDF Tempo",
+        "data": {
+          "tempo_enabled": "Enable Tempo",
+          "tempo_today_entity": "Today's applicable color",
+          "tempo_tomorrow_entity": "Tomorrow's color",
+          "tempo_unknown_blocks": "Block peak hours when color is unknown",
+          "preheat_enabled": "Preheat before red days",
+          "preheat_start": "Preheat start hour before 06:00",
+          "preheat_delta": "Preheat uplift (limited by solar ceiling)",
+          "white_delta": "White day temperature offset",
+          "red_delta": "Red day temperature offset"
+        }
+      },
+      "solar": {
+        "title": "Photovoltaics",
+        "data": {
+          "solar_enabled": "Enable solar preheating",
+          "production_entity": "Photovoltaic production",
+          "house_entity": "Whole-house consumption",
+          "grid_entity": "Signed grid balance (preferred)",
+          "grid_export_positive": "Positive grid reading means export",
+          "house_includes_pump": "House consumption already includes heat pump",
+          "solar_red_allowed": "Allow solar heating during red peak hours",
+          "solar_start": "Solar start electrical threshold",
+          "solar_hold": "Solar hold threshold",
+          "solar_margin": "Power margin",
+          "solar_hysteresis": "Power hysteresis",
+          "solar_delay": "Surplus qualification duration",
+          "solar_min_on": "Minimum solar mode duration",
+          "solar_stop_delay": "Deficit duration before ending solar"
+        }
+      },
+      "safety": {
+        "title": "Safety and control authorization",
+        "data": {
+          "control_enabled": "Allow physical control arming",
+          "hydraulic_confirmed": "Installer confirmed independent minimum flow",
+          "exclusive_confirmed": "VTherm and previous controllers disabled",
+          "capabilities_confirmed": "LG modes and actuators verified on site",
+          "min_on": "Minimum heat pump heating-mode on time",
+          "min_off": "Minimum heat pump off time",
+          "demand_delay": "Stable demand before start",
+          "drain_delay": "Run-on delay after confirmed off",
+          "command_interval": "Minimum command interval",
+          "ack_timeout": "Command acknowledgement timeout",
+          "sensor_max_age": "Maximum age of received data",
+          "water_max": "High water threshold: suspend commands"
+        },
+        "description": "Independent hydraulic flow is required. Physical control must be armed after each restart. Suspension preserves physical states; native protections remain essential."
+      },
+      "room": {
+        "title": "Room settings",
+        "data": {
+          "name": "Room name",
+          "sensor": "External reference sensor",
+          "actuators": "Climate heads / 0–100 % numbers / positionable valves",
+          "actuator_notes": "Make, model and calibration notes (optional)",
+          "present": "Present temperature",
+          "absent": "Away temperature",
+          "night": "Night temperature",
+          "holiday": "Holiday temperature",
+          "manual": "Manual mode temperature",
+          "solar": "Maximum solar temperature",
+          "frost": "Frost protection minimum",
+          "valve_hot": "Head setpoint when heating (climate)",
+          "valve_cold": "Head setpoint when idle (climate)",
+          "hysteresis": "Temperature hysteresis",
+          "gain": "Opening per degree (number/valve)",
+          "enabled": "Enable room heating",
+          "solar_enabled": "Enable solar preheating"
+        },
+        "description": "Regulation uses the external sensor. Climate heads receive calibrated high/low setpoints, not confirmed physical openings. Numbers must represent a 0–100 % valve opening."
+      },
+      "edit_room": {
+        "title": "Edit room",
+        "data": {
+          "room": "Room"
+        }
+      },
+      "delete_room": {
+        "title": "Delete room",
+        "data": {
+          "room": "Room"
+        },
+        "description": "The selected room will be removed when configuration is saved."
+      },
+      "finish": {
+        "title": "Save configuration",
+        "data": {},
+        "description": "Correct the indicated settings. Submit this form to return to the menu."
+      },
+      "init": {
+        "title": "Options",
+        "data": {}
+      },
+      "menu": {
+        "title": "Configuration",
+        "menu_options": {
+          "system": "Heat pump and monitoring",
+          "presence": "Occupancy and overrides",
+          "tempo": "EDF Tempo",
+          "solar": "Photovoltaics",
+          "safety": "Safety and control authorization",
+          "rooms": "Manage rooms",
+          "finish": "Save configuration"
+        }
+      },
+      "rooms": {
+        "title": "Manage rooms",
+        "menu_options": {
+          "add_room": "Add room",
+          "edit_room": "Edit room",
+          "delete_room": "Delete room",
+          "menu": "Configuration"
+        }
+      }
+    },
+    "error": {
+      "room_required": "Add at least one room with a sensor and actuators.",
+      "solar_sources_required": "Select signed grid balance or production and house consumption.",
+      "presence_required": "Select an occupancy entity.",
+      "tempo_required": "Select today's Tempo entity.",
+      "solar_thresholds_invalid": "Hold must not exceed start; hysteresis must not exceed hold.",
+      "confirmations_required": "Confirm independent flow, exclusive control and verified capabilities before allowing commands.",
+      "pump_mode_not_supported": "Select heat or auto.",
+      "temperature_invalid": "Check temperature bounds, frost minimum, hysteresis and head setpoints.",
+      "duplicate_actuator": "Each actuator must be unique and different from the heat pump.",
+      "sensor_is_actuator": "External sensor must be different from actuators.",
+      "recursive_entity": "Do not use Smart Heat Manager entities as inputs."
+    },
+    "abort": {
+      "single_instance_allowed": "Only one installation is supported."
+    }
+  },
+  "options": {
+    "step": {
+      "user": {
+        "title": "Set up Smart Heat Manager",
+        "data": {
+          "pump_entity": "Heat pump climate entity"
+        },
+        "description": "Installation starts in observation. Select an existing LG entity, then configure rooms and features."
+      },
+      "system": {
+        "title": "Heat pump and monitoring",
+        "data": {
+          "pump_entity": "Heat pump climate entity",
+          "pump_mode": "Native heating mode",
+          "pump_power_entity": "Heat pump electrical power (W or kW)",
+          "water_in_entity": "Inlet water temperature",
+          "water_out_entity": "Outlet water temperature",
+          "protection_entity": "Protection signal (ON inhibits commands)"
+        }
+      },
+      "presence": {
+        "title": "Occupancy and overrides",
+        "data": {
+          "presence_enabled": "Enable occupancy",
+          "presence_entity": "House occupancy",
+          "presence_delay": "Occupancy debounce",
+          "override_minutes": "Override and temporary mode duration"
+        }
+      },
+      "tempo": {
+        "title": "EDF Tempo",
+        "data": {
+          "tempo_enabled": "Enable Tempo",
+          "tempo_today_entity": "Today's applicable color",
+          "tempo_tomorrow_entity": "Tomorrow's color",
+          "tempo_unknown_blocks": "Block peak hours when color is unknown",
+          "preheat_enabled": "Preheat before red days",
+          "preheat_start": "Preheat start hour before 06:00",
+          "preheat_delta": "Preheat uplift (limited by solar ceiling)",
+          "white_delta": "White day temperature offset",
+          "red_delta": "Red day temperature offset"
+        }
+      },
+      "solar": {
+        "title": "Photovoltaics",
+        "data": {
+          "solar_enabled": "Enable solar preheating",
+          "production_entity": "Photovoltaic production",
+          "house_entity": "Whole-house consumption",
+          "grid_entity": "Signed grid balance (preferred)",
+          "grid_export_positive": "Positive grid reading means export",
+          "house_includes_pump": "House consumption already includes heat pump",
+          "solar_red_allowed": "Allow solar heating during red peak hours",
+          "solar_start": "Solar start electrical threshold",
+          "solar_hold": "Solar hold threshold",
+          "solar_margin": "Power margin",
+          "solar_hysteresis": "Power hysteresis",
+          "solar_delay": "Surplus qualification duration",
+          "solar_min_on": "Minimum solar mode duration",
+          "solar_stop_delay": "Deficit duration before ending solar"
+        }
+      },
+      "safety": {
+        "title": "Safety and control authorization",
+        "data": {
+          "control_enabled": "Allow physical control arming",
+          "hydraulic_confirmed": "Installer confirmed independent minimum flow",
+          "exclusive_confirmed": "VTherm and previous controllers disabled",
+          "capabilities_confirmed": "LG modes and actuators verified on site",
+          "min_on": "Minimum heat pump heating-mode on time",
+          "min_off": "Minimum heat pump off time",
+          "demand_delay": "Stable demand before start",
+          "drain_delay": "Run-on delay after confirmed off",
+          "command_interval": "Minimum command interval",
+          "ack_timeout": "Command acknowledgement timeout",
+          "sensor_max_age": "Maximum age of received data",
+          "water_max": "High water threshold: suspend commands"
+        },
+        "description": "Independent hydraulic flow is required. Physical control must be armed after each restart. Suspension preserves physical states; native protections remain essential."
+      },
+      "room": {
+        "title": "Room settings",
+        "data": {
+          "name": "Room name",
+          "sensor": "External reference sensor",
+          "actuators": "Climate heads / 0–100 % numbers / positionable valves",
+          "actuator_notes": "Make, model and calibration notes (optional)",
+          "present": "Present temperature",
+          "absent": "Away temperature",
+          "night": "Night temperature",
+          "holiday": "Holiday temperature",
+          "manual": "Manual mode temperature",
+          "solar": "Maximum solar temperature",
+          "frost": "Frost protection minimum",
+          "valve_hot": "Head setpoint when heating (climate)",
+          "valve_cold": "Head setpoint when idle (climate)",
+          "hysteresis": "Temperature hysteresis",
+          "gain": "Opening per degree (number/valve)",
+          "enabled": "Enable room heating",
+          "solar_enabled": "Enable solar preheating"
+        },
+        "description": "Regulation uses the external sensor. Climate heads receive calibrated high/low setpoints, not confirmed physical openings. Numbers must represent a 0–100 % valve opening."
+      },
+      "edit_room": {
+        "title": "Edit room",
+        "data": {
+          "room": "Room"
+        }
+      },
+      "delete_room": {
+        "title": "Delete room",
+        "data": {
+          "room": "Room"
+        },
+        "description": "The selected room will be removed when configuration is saved."
+      },
+      "finish": {
+        "title": "Save configuration",
+        "data": {},
+        "description": "Correct the indicated settings. Submit this form to return to the menu."
+      },
+      "init": {
+        "title": "Options",
+        "data": {}
+      },
+      "menu": {
+        "title": "Configuration",
+        "menu_options": {
+          "system": "Heat pump and monitoring",
+          "presence": "Occupancy and overrides",
+          "tempo": "EDF Tempo",
+          "solar": "Photovoltaics",
+          "safety": "Safety and control authorization",
+          "rooms": "Manage rooms",
+          "finish": "Save configuration"
+        }
+      },
+      "rooms": {
+        "title": "Manage rooms",
+        "menu_options": {
+          "add_room": "Add room",
+          "edit_room": "Edit room",
+          "delete_room": "Delete room",
+          "menu": "Configuration"
+        }
+      }
+    },
+    "error": {
+      "room_required": "Add at least one room with a sensor and actuators.",
+      "solar_sources_required": "Select signed grid balance or production and house consumption.",
+      "presence_required": "Select an occupancy entity.",
+      "tempo_required": "Select today's Tempo entity.",
+      "solar_thresholds_invalid": "Hold must not exceed start; hysteresis must not exceed hold.",
+      "confirmations_required": "Confirm independent flow, exclusive control and verified capabilities before allowing commands.",
+      "pump_mode_not_supported": "Select heat or auto.",
+      "temperature_invalid": "Check temperature bounds, frost minimum, hysteresis and head setpoints.",
+      "duplicate_actuator": "Each actuator must be unique and different from the heat pump.",
+      "sensor_is_actuator": "External sensor must be different from actuators.",
+      "recursive_entity": "Do not use Smart Heat Manager entities as inputs."
+    }
+  },
+  "selector": {
+    "pump_mode": {
+      "options": {
+        "heat": "Heating",
+        "auto": "Native auto (verify behavior)"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "decision": {
+        "name": "Decision",
+        "state": {
+          "fault": "Fault",
+          "paused": "Automations paused",
+          "frost": "Frost protection",
+          "tempo_blocked": "Tempo restriction",
+          "heating": "Normal request",
+          "solar_heating": "Solar request",
+          "idle": "Idle"
+        }
+      },
+      "reason": {
+        "name": "Reason"
+      },
+      "controller": {
+        "name": "Controller state",
+        "state": {
+          "observation": "Observation",
+          "command_fault": "Unconfirmed command",
+          "suspended": "Commands suspended",
+          "minimum_on": "Minimum on time",
+          "minimum_off": "Minimum off time",
+          "running": "Heating mode active",
+          "starting": "Starting",
+          "stopping": "Stopping",
+          "idle": "Idle",
+          "opening_emitters": "Waiting for emitters",
+          "draining": "Circulation run-on"
+        }
+      },
+      "surplus": {
+        "name": "Net grid surplus"
+      },
+      "solar_budget": {
+        "name": "Power available to heat pump after margin"
+      },
+      "pump_power": {
+        "name": "Heat pump electrical power"
+      },
+      "tempo": {
+        "name": "Tempo color",
+        "state": {
+          "red": "Red",
+          "white": "White",
+          "blue": "Blue",
+          "unknown": "Unknown"
+        }
+      },
+      "demand_count": {
+        "name": "Rooms requesting heat"
+      }
+    },
+    "binary_sensor": {
+      "heat_requested": {
+        "name": "Global heat request"
+      },
+      "tempo_blocked": {
+        "name": "Tempo restriction"
+      },
+      "solar_active": {
+        "name": "Solar preheating active"
+      },
+      "fault": {
+        "name": "Fault"
+      },
+      "room_demand": {
+        "name": "Heating request"
+      }
+    },
+    "switch": {
+      "armed": {
+        "name": "Physical control arming (session)"
+      },
+      "automation_enabled": {
+        "name": "Automations"
+      },
+      "solar_enabled": {
+        "name": "Solar optimization"
+      },
+      "force": {
+        "name": "Temporary general override"
+      },
+      "tempo_bypass": {
+        "name": "Temporary Tempo override"
+      },
+      "room_solar": {
+        "name": "Solar preheating"
+      }
+    },
+    "number": {
+      "solar_start": {
+        "name": "Solar start threshold"
+      },
+      "solar_hold": {
+        "name": "Solar hold threshold"
+      },
+      "solar_margin": {
+        "name": "Solar margin"
+      },
+      "override_minutes": {
+        "name": "Override duration"
+      },
+      "solar_target": {
+        "name": "Solar temperature ceiling"
+      }
+    },
+    "select": {
+      "mode": {
+        "name": "Temporary global mode",
+        "state": {
+          "auto": "Automatic",
+          "present": "Present",
+          "absent": "Away",
+          "night": "Night",
+          "holiday": "Holiday",
+          "manual": "Manual"
+        }
+      }
+    },
+    "button": {
+      "reset_fault": {
+        "name": "Acknowledge fault (disarms)"
+      },
+      "evaluate": {
+        "name": "Recalculate"
+      }
+    },
+    "climate": {
+      "climate": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "Automatic",
+              "present": "Present",
+              "absent": "Away",
+              "night": "Night",
+              "holiday": "Holiday",
+              "manual": "Manual"
+            }
+          }
+        }
+      }
+    }
+  }
+}
