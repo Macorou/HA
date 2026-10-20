@@ -50,6 +50,8 @@ class HeatSwitch(HeatEntity, SwitchEntity):
 
     @property
     def extra_state_attributes(self):
+        if self.key == "night_schedule_enabled":
+            return {"schedule_type": "night"}
         if self.key in ("force", "tempo_bypass"):
             return {
                 "expires_at": self.coordinator.runtime["overrides"].get(self.key, {}).get("until")
