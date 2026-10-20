@@ -13,9 +13,9 @@ le climate, l'ouverture et la fermeture de chaque tête. Une paire compte comme 
 émetteur logique. Chaque pourcentage P commande ouverture=P et fermeture=100−P ;
 la consigne de température native de la tête n'est pas modifiée par ce profil.
 Les confirmations portent sur les trois entités. Une seule indisponible suspend
-les commandes ; un réglage non appliqué empêche le démarrage PAC et verrouille un
+les commandes ; un réglage non appliqué empêche l'ajustement PAC et verrouille un
 défaut après le délai habituel. Les deux réglages restent coordonnés pendant le
-minimum marche et la circulation résiduelle. Ils ne sont jamais assimilés à une
+pilotage par consigne PAC. Ils ne sont jamais assimilés à une
 preuve d'ouverture mécanique. Le constructeur ne documente ces degrés qu'à partir
 du micrologiciel 1.1.4 ; vérifier aussi que le contrôle intelligent natif n'interfère
 pas. Le profil ne déclenche ni recalibration, ni mise à jour, ni désactivation du
@@ -98,20 +98,30 @@ une mesure adaptée et valider les résultats avant usage.
 Activation après `seuil démarrage + hystérésis` pendant la durée de qualification.
 Fin après passage sous `maintien − hystérésis` pendant le délai d'arrêt, à condition
 que la durée minimale solaire soit écoulée. La perte d'une source indispensable
-termine l'élévation solaire ; les minima physiques PAC continuent de s'appliquer.
+  termine l'élévation solaire ; la PAC conserve ses protections et temporisations natives.
 Il ne s'agit jamais d'une consigne directe de puissance compresseur.
 
-## Temporisations PAC et défauts
+## PAC autonome et défauts
 
-Valeurs initiales : minimum marche 20 min, minimum arrêt 10 min, demande stable
-2 min, circulation après arrêt 3 min, intervalle commande 1 min, confirmation 3 min.
-Ces valeurs sont à valider sur l'installation. Au premier relevé, le minimum du mode
-observé recommence de façon conservatrice, faute d'historique compresseur fiable.
+La PAC reçoit seulement `set_temperature`. Aucun ordre marche/arrêt ou changement
+de mode n'est construit, et le transport les interdit explicitement sur la PAC.
+Une PAC en `off` ne reçoit aucun ordre, même pour le hors-gel ou le solaire.
 
-Les têtes sont confirmées avant l'ordre de démarrage. Pendant la marche normale,
-les pièces satisfaites peuvent fermer leurs têtes puisque le débit indépendant
-a été validé. Lorsqu'il n'y a plus de demande, les dernières ouvertures sont
-conservées pendant le minimum marche, l'arrêt confirmé et le délai de circulation.
+Les nombres **Consigne PAC normale**, **Consigne PAC Tempo réduit** et **Consigne PAC
+solaire** sont modifiables quotidiennement et persistés. Leurs valeurs initiales
+sont 20 / 17 / 22 °C : les vérifier avant l'armement. Les limites et le pas suivent
+les capacités natives ; les valeurs incompatibles sont refusées, pas corrigées en
+silence. Sans demande des pièces la cible normale est conservée. Tempo réduit
+abaisse la cible, mais n'interdit pas au compresseur de chauffer nativement.
+Le préchauffage avant un jour rouge peut relever la cible normale de l'écart
+configuré, sans dépasser la cible solaire ni abaisser une consigne plus haute.
+
+Les têtes sont confirmées avant l'ajustement PAC. Elles peuvent fermer dès que
+les pièces sont satisfaites ; le circuit de référence et le débit hydraulique
+indépendant sont indispensables. La PAC gère elle-même la modulation et les
+minima marche/arrêt. Les anciens réglages `min_on`, `min_off`, `demand_delay` et
+`drain_delay` peuvent subsister dans les anciennes données mais sont ignorés.
+SHM conserve l'intervalle de commande (60 s initialement) et les accusés (180 s).
 
 Les ordres non appliqués sont signalés, sans boucle de tentatives. Le bouton
 Acquitter efface le verrou de commande et désarme ; vérifier la cause puis réarmer.

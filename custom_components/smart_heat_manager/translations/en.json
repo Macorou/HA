@@ -12,7 +12,10 @@
         "title": "Heat pump and monitoring",
         "data": {
           "pump_entity": "Heat pump climate entity",
-          "pump_mode": "Native heating mode",
+          "pump_mode": "Expected native mode (monitored, never commanded)",
+          "pump_normal_target": "Normal heat pump setpoint",
+          "pump_tempo_target": "Reduced Tempo heat pump setpoint",
+          "pump_solar_target": "Solar heat pump setpoint",
           "pump_power_entity": "Heat pump electrical power (W or kW)",
           "water_in_entity": "Inlet water temperature",
           "water_out_entity": "Outlet water temperature",
@@ -67,11 +70,7 @@
           "control_enabled": "Allow physical control arming",
           "hydraulic_confirmed": "Installer confirmed independent minimum flow",
           "exclusive_confirmed": "VTherm and previous controllers disabled",
-          "capabilities_confirmed": "LG modes and actuators verified on site",
-          "min_on": "Minimum heat pump heating-mode on time",
-          "min_off": "Minimum heat pump off time",
-          "demand_delay": "Stable demand before start",
-          "drain_delay": "Run-on delay after confirmed off",
+          "capabilities_confirmed": "Heat pump setpoints and actuators verified on site",
           "command_interval": "Minimum command interval",
           "ack_timeout": "Command acknowledgement timeout",
           "sensor_max_age": "Maximum age of power / water / protection readings",
@@ -212,7 +211,10 @@
         "title": "Heat pump and monitoring",
         "data": {
           "pump_entity": "Heat pump climate entity",
-          "pump_mode": "Native heating mode",
+          "pump_mode": "Expected native mode (monitored, never commanded)",
+          "pump_normal_target": "Normal heat pump setpoint",
+          "pump_tempo_target": "Reduced Tempo heat pump setpoint",
+          "pump_solar_target": "Solar heat pump setpoint",
           "pump_power_entity": "Heat pump electrical power (W or kW)",
           "water_in_entity": "Inlet water temperature",
           "water_out_entity": "Outlet water temperature",
@@ -267,11 +269,7 @@
           "control_enabled": "Allow physical control arming",
           "hydraulic_confirmed": "Installer confirmed independent minimum flow",
           "exclusive_confirmed": "VTherm and previous controllers disabled",
-          "capabilities_confirmed": "LG modes and actuators verified on site",
-          "min_on": "Minimum heat pump heating-mode on time",
-          "min_off": "Minimum heat pump off time",
-          "demand_delay": "Stable demand before start",
-          "drain_delay": "Run-on delay after confirmed off",
+          "capabilities_confirmed": "Heat pump setpoints and actuators verified on site",
           "command_interval": "Minimum command interval",
           "ack_timeout": "Command acknowledgement timeout",
           "sensor_max_age": "Maximum age of power / water / protection readings",
@@ -429,7 +427,9 @@
           "suspended": "Commands suspended",
           "minimum_on": "Minimum on time",
           "minimum_off": "Minimum off time",
-          "running": "Heating mode active",
+          "running": "Setpoint regulation",
+          "pump_off": "Heat pump off — no commands",
+          "adjusting_setpoint": "Waiting for heat pump setpoint",
           "starting": "Starting",
           "stopping": "Stopping",
           "idle": "Idle",
@@ -445,6 +445,9 @@
       },
       "pump_power": {
         "name": "Heat pump electrical power"
+      },
+      "pump_target": {
+        "name": "Calculated heat pump setpoint"
       },
       "tempo": {
         "name": "Tempo color",
@@ -511,6 +514,15 @@
       },
       "solar_target": {
         "name": "Solar temperature ceiling"
+      },
+      "pump_normal_target": {
+        "name": "Normal heat pump setpoint"
+      },
+      "pump_tempo_target": {
+        "name": "Reduced Tempo heat pump setpoint"
+      },
+      "pump_solar_target": {
+        "name": "Solar heat pump setpoint"
       }
     },
     "select": {

@@ -29,7 +29,17 @@ def config(**settings):
 class FakeTransport:
     def __init__(self, acknowledge=True):
         self.entities = {
-            "climate.pump": EntityState("off", {"hvac_modes": ["off", "heat", "auto"]}),
+            "climate.pump": EntityState(
+                "heat",
+                {
+                    "hvac_modes": ["off", "heat", "auto"],
+                    "supported_features": 1,
+                    "min_temp": 16,
+                    "max_temp": 30,
+                    "target_temp_step": 1,
+                    "temperature": 17,
+                },
+            ),
             "number.valve": EntityState("0", {"min": 0, "max": 100, "step": 1, "unit_of_measurement": "%"}),
         }
         self.sent = []

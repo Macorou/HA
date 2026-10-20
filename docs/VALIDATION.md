@@ -16,13 +16,13 @@ du dossier `examples` si l'installation réelle ne doit pas encore être sollici
 
 Pendant un essai physique supervisé :
 
-1. Vérifier l'ouverture de chaque tête et son retour, et les commandes `heat/auto/off`
-   natives LG sans modifier la loi d'eau. Consigner les délais cloud réels.
+1. Vérifier l'ouverture de chaque tête et son retour, puis les commandes de
+   température PAC sans aucun ordre LG marche/arrêt/mode. Consigner les délais réels.
 2. Comparer température externe, température de la tête et fonctionnement mécanique.
-3. Contrôler plusieurs pièces à la fois, puis la dernière demande et la circulation
-   résiduelle. Relever le débit réel et les conditions de dégivrage avec l'installateur.
-4. Vérifier l'anti-cycle avec les durées approuvées. Observer la puissance réelle,
-   distincte du mode chauffage demandé.
+3. Contrôler plusieurs pièces puis l'absence de demande : la PAC conserve son mode
+   et sa cible normale. Relever le débit réel et le dégivrage avec l'installateur.
+4. Vérifier les trois consignes, le respect d'un arrêt manuel de la PAC et la
+   limitation des commandes. Observer la modulation et les anti-cycles natifs.
 5. Provoquer une indisponibilité simulée, vérifier l'alerte et l'absence de spam d'ordres.
 6. Vérifier qu'un redémarrage désarme et laisse les protections natives opérationnelles.
 7. Tester le retour en observation et la reprise contrôlée par l'ancien système si nécessaire.

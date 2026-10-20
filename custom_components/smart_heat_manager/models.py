@@ -50,7 +50,7 @@ class Decision:
     state: str
     reason: str
     mode: str
-    pump_requested: bool
+    pump_requested: bool  # Logical room demand only; never an on/off command.
     rooms: dict[str, RoomDecision]
     surplus: float | None
     solar_budget: float | None
@@ -59,6 +59,7 @@ class Decision:
     tempo_blocked: bool
     override_active: bool
     faults: list[str] = field(default_factory=list)
+    pump_target: float | None = None
 
 
 def effective_config(data: dict, options: dict | None = None) -> dict[str, Any]:

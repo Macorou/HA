@@ -76,6 +76,10 @@ class Engine:
             faults.append("water_temperature_high")
         demand = any(r.demand for r in rooms.values())
         frost = any(r.frost for r in rooms.values())
+        solar_demand = solar and any(
+            rooms[r["id"]].demand and runtime.get("room_solar", {}).get(r["id"], r["solar_enabled"])
+            for r in config["rooms"]
+        )
         paused = not runtime.get("automation_enabled", True)
         if faults:
             state, reason = "fault", faults[0]
@@ -83,12 +87,24 @@ class Engine:
             state, reason = "paused", "automation_disabled"
         elif frost:
             state, reason = "frost", "frost_priority"
-        elif tempo and not (bypass or force or solar and cfg["solar_red_allowed"]):
+        elif tempo and not (bypass or force or solar_demand and cfg["solar_red_allowed"]):
             state, reason = "tempo_blocked", "red_peak_hours" if today == "red" else "tempo_unknown"
         elif demand:
-            state, reason = ("solar_heating", "solar_surplus") if solar else ("heating", "room_demand")
+            state, reason = ("solar_heating", "solar_surplus") if solar_demand else ("heating", "room_demand")
         else:
             state, reason = "idle", "no_demand"
+        pump_target = None
+        if not faults and not paused:
+            # No room demand does NOT stop or lower the autonomous heat pump.
+            pump_target = cfg[
+                "pump_tempo_target"
+                if state == "tempo_blocked"
+                else "pump_solar_target"
+                if state == "solar_heating"
+                else "pump_normal_target"
+            ]
+            if anticipatory and state != "tempo_blocked":
+                pump_target = max(pump_target, min(cfg["pump_solar_target"], pump_target + cfg["preheat_delta"]))
         return Decision(
             state,
             reason,
@@ -102,4 +118,5 @@ class Engine:
             bool(tempo),
             bypass or force,
             faults,
+            pump_target,
         )

@@ -93,13 +93,33 @@ def actuator_plan(
     raise ValueError("unsupported_actuator")
 
 
-def pump_plan(entity_id: str, state: EntityState | None, mode: str, requested: bool) -> Command:
+def pump_target_value(state: EntityState | None, target: float) -> float:
+    """Validate an ambient setpoint without silently exceeding native limits."""
     if state is None or not state.available:
         raise ValueError("pump_unavailable")
+    attrs = state.attributes
+    if not int(attrs.get("supported_features", 0)) & 1:
+        raise ValueError("pump_temperature_not_supported")
+    try:
+        low, high = float(attrs["min_temp"]), float(attrs["max_temp"])
+        step = float(attrs.get("target_temp_step") or 0.5)
+        if not all(isfinite(v) for v in (target, low, high, step)) or not low <= target <= high:
+            raise ValueError("pump_temperature_out_of_range")
+        value = bounded(target, low, high, step)
+        if abs(value - target) > 0.001:
+            raise ValueError("pump_temperature_step_invalid")
+        return value
+    except (KeyError, TypeError) as err:
+        raise ValueError("pump_temperature_bounds_missing") from err
+
+
+def pump_temperature_plan(entity_id: str, state: EntityState | None, mode: str, target: float) -> Command:
+    """Never enable, disable, or change a heat pump's native operating mode."""
+    value = pump_target_value(state, target)
     if mode not in ("heat", "auto"):
         raise ValueError("pump_mode_not_supported")
-    if any(value not in state.attributes.get("hvac_modes", []) for value in (mode, "off")):
-        raise ValueError("pump_modes_not_supported")
-    if state.state not in (mode, "off"):
+    if state.state == "off":
+        raise ValueError("pump_manually_off")
+    if state.state != mode:
         raise ValueError("pump_external_mode")
-    return Command(entity_id, "set_hvac_mode", "hvac_mode", mode if requested else "off", None)
+    return Command(entity_id, "set_temperature", "temperature", value, "temperature", 0.01)

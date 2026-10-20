@@ -25,6 +25,11 @@ def validate_config(config: dict) -> None:
         raise ValueError("confirmations_required")
     if cfg["pump_mode"] not in ("heat", "auto"):
         raise ValueError("pump_mode_not_supported")
+    if any(
+        not isfinite(cfg[key]) or not 5 <= cfg[key] <= 35
+        for key in ("pump_normal_target", "pump_tempo_target", "pump_solar_target")
+    ):
+        raise ValueError("temperature_invalid")
     outputs = [cfg["pump_entity"]]
     for room in rooms:
         for head in room.get("trvzb_heads", []):

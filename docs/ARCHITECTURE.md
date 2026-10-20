@@ -1,6 +1,6 @@
 # Architecture et plan de réalisation
 
-Smart Heat Manager 0.1.2 est une intégration locale d'orchestration : elle exploite
+Smart Heat Manager 0.2.0 est une intégration locale d'orchestration : elle exploite
 les états et services des intégrations déjà installées, sans identifiants LG,
 sans dépendance VTherm et sans accès direct au cloud.
 
@@ -16,7 +16,7 @@ sans dépendance VTherm et sans accès direct au cloud.
 | `engine.py` | Arbitrage explicite et décisions explicables sans effets de bord |
 | `adapters.py` | Commandes climate/number/valve, capacités vérifiées |
 | `emitters.py` | Groupes physiques : vanne simple ou SONOFF TRVZB avec ouverture, fermeture et climate |
-| `controller.py` | Sérialisation, anti-cycles, accusés d'état, purge hydraulique |
+| `controller.py` | Sérialisation, accusés d'état, consignes PAC exclusivement |
 | `coordinator.py` | Événements HA, échéances, persistance, mode observation |
 | `config_flow.py` | Installation et options : pièces ajoutables/modifiables/supprimables |
 | Plateformes | Climate par pièce, capteurs, interrupteurs, nombres, sélection de mode |
@@ -40,15 +40,22 @@ dérogation économique temporisée → autorisation ; Tempo rouge HP → blocag
 besoin normal → chauffe ; surplus durable → élévation bornée des consignes ; sinon repos.
 
 Le résultat logique (`fault`, `paused`, `frost`, `tempo_blocked`, `heating`,
-`solar_heating`, `idle`) est distinct du transport (`observation`, `starting`,
-`running`, `minimum_on`, `minimum_off`, `draining`, `command_fault`).
+`solar_heating`, `idle`) est distinct du transport (`observation`, `running`,
+`pump_off`, `adjusting_setpoint`, `opening_emitters`, `suspended`, `command_fault`).
 Une demande logique ne prouve jamais que le compresseur tourne.
 
-Le contrôleur ouvre et confirme les émetteurs avant d'autoriser la PAC. Il respecte
-un minimum marche/arrêt du mode chauffage, puis attend la confirmation d'arrêt et
-un délai de circulation avant de fermer les émetteurs. En défaut il suspend les
-ordres, conserve les positions et signale l'anomalie. Il ne coupe pas l'alimentation
-électrique, ne commande pas l'ECS et ne modifie pas la loi d'eau.
+Le contrôleur confirme les émetteurs avant de modifier la température ambiante
+demandée à la PAC. La PAC n'est jamais allumée, éteinte ou changée de mode par SHM.
+Une barrière supplémentaire dans le transport interdit tout service autre que
+`set_temperature` sur son entité et revalide son mode juste avant l'envoi. En
+défaut il suspend les ordres et conserve les états physiques. La régulation native,
+les anti-cycles, l'ECS et la loi d'eau restent à la charge de la PAC. Les têtes
+peuvent fermer lorsque les pièces sont satisfaites : le débit indépendant est requis.
+
+La cible normale est conservée sans demande ; la cible réduite s'applique au
+blocage Tempo, la cible solaire au surplus qualifié avec une pièce éligible en
+demande. Les trois cibles sont des préférences persistantes modifiables en `number`.
+La pause et les défauts produisent une cible nulle (aucun ordre, pas une consigne zéro).
 
 ## Électricité solaire
 
@@ -62,7 +69,7 @@ sur le surplus net. Donnée solaire invalide : aucun nouveau préchauffage.
 
 ## Validations terrain nécessaires
 
-- Modes `heat` ou `auto`, retour d'état et délais réels des entités LG choisies.
+- Mode natif attendu `heat` ou `auto`, plage/pas de température et retours d'état LG.
 - Ouverture des têtes : pourcentage natif ou consigne de substitution à calibrer ;
   régler une consigne élevée ne constitue pas une preuve d'ouverture physique.
 - Débit minimal, ballon tampon/bypass ou circuit permanent, dégivrage, circulation

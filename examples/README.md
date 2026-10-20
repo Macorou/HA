@@ -19,6 +19,7 @@ ceux **de cette simulation**, pas ceux de l'installation réelle.
 3. Dans Smart Heat Manager, sélectionner le climate « SHM Demo PAC », la sonde
    « SHM Demo Température Salon » et le climate « SHM Demo Tête Salon » comme actionneur.
 4. Choisir les helpers Production, Maison, Réseau, PAC électrique, Présence et Tempo.
+   Mettre manuellement la PAC fictive en Chauffage : SHM ne l'allume jamais.
 5. Modifier les valeurs des helpers depuis l'interface. La température ne change
    pas automatiquement : régler sa valeur permet de simuler un réchauffement.
 

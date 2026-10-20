@@ -105,7 +105,7 @@ class TRVZBTests(unittest.IsolatedAsyncioTestCase):
         decision = self.engine.evaluate(self.cfg, Snapshot(self.now, {"living": 18 if heat else 23}), {})
         await self.controller.tick(self.cfg, decision, self.now + timedelta(seconds=sec), armed)
 
-    async def test_both_endpoints_before_head_mode_and_pump_start(self):
+    async def test_both_endpoints_before_head_mode_and_pump_setpoint(self):
         await self.tick(0)
         await self.tick(300)
         self.assertEqual(
@@ -124,7 +124,7 @@ class TRVZBTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.transport.sent, [])
         self.assertEqual(self.controller.status, "command_fault")
 
-    async def test_closing_ack_required_before_pump_start(self):
+    async def test_closing_ack_required_before_pump_setpoint(self):
         original_send = self.transport.send
 
         async def send(command):
@@ -135,23 +135,23 @@ class TRVZBTests(unittest.IsolatedAsyncioTestCase):
 
         self.transport.send = send
         await self.tick(0)
-        await self.tick(300)
+        await self.tick(10)
         self.assertEqual(self.controller.status, "opening_emitters")
-        self.assertEqual(self.transport.state("climate.pump").state, "off")
+        self.assertEqual(self.transport.state("climate.pump").attributes["temperature"], 17)
         await self.tick(331)
         self.assertEqual(self.controller.status, "command_fault")
 
-    async def test_pair_held_until_pump_off_and_drain_finished(self):
+    async def test_pair_closes_without_turning_off_autonomous_pump(self):
         await self.tick(0)
         await self.tick(300)
         await self.tick(315)
         await self.tick(400, heat=False)
-        self.assertEqual(self.transport.state("number.opening").state, "100")
-        self.assertEqual(self.transport.state("number.closing").state, "0")
+        self.assertEqual(float(self.transport.state("number.opening").state), 0)
+        self.assertEqual(float(self.transport.state("number.closing").state), 100)
         await self.tick(615, heat=False)
         await self.tick(630, heat=False)
-        self.assertEqual(self.controller.status, "draining")
-        self.assertEqual(self.transport.state("number.opening").state, "100")
+        self.assertEqual(self.controller.status, "running")
+        self.assertEqual(self.transport.state("climate.pump").state, "heat")
         await self.tick(691, heat=False)
         self.assertEqual(float(self.transport.state("number.opening").state), 0)
         self.assertEqual(float(self.transport.state("number.closing").state), 100)

@@ -59,6 +59,7 @@ def run():
                 "surplus": result.surplus,
                 "budget": result.solar_budget,
                 "requested": result.pump_requested,
+                "pump_setpoint": result.pump_target,
             }
         )
     if args.json:
@@ -66,7 +67,7 @@ def run():
     else:
         for row in records:
             print(
-                f"{row['scenario']:28} {row['state']:16} cible={row['target']:4.1f} °C  PAC demandée={row['requested']}"
+                f"{row['scenario']:28} {row['state']:16} cible pièce={row['target']:4.1f} °C  cible PAC={row['pump_setpoint']}"
             )
 
 

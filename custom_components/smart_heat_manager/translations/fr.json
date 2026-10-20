@@ -12,7 +12,10 @@
         "title": "Pompe à chaleur et surveillance",
         "data": {
           "pump_entity": "Entité climate de la pompe à chaleur",
-          "pump_mode": "Mode natif à utiliser",
+          "pump_mode": "Mode natif attendu (surveillé, jamais commandé)",
+          "pump_normal_target": "Consigne PAC normale",
+          "pump_tempo_target": "Consigne PAC Tempo réduit",
+          "pump_solar_target": "Consigne PAC solaire",
           "pump_power_entity": "Puissance électrique PAC (W ou kW)",
           "water_in_entity": "Température entrée d’eau",
           "water_out_entity": "Température sortie d’eau",
@@ -67,11 +70,7 @@
           "control_enabled": "Permettre l’armement des commandes physiques",
           "hydraulic_confirmed": "Débit garanti indépendamment des têtes et du logiciel (validation installateur)",
           "exclusive_confirmed": "VTherm et tous les anciens pilotes sont désactivés",
-          "capabilities_confirmed": "Modes LG et comportement des actionneurs testés sur l’installation",
-          "min_on": "Durée minimale du mode chauffage PAC",
-          "min_off": "Durée minimale avant réactivation PAC",
-          "demand_delay": "Demande stable avant démarrage",
-          "drain_delay": "Circulation résiduelle après arrêt confirmé",
+          "capabilities_confirmed": "Consignes PAC et comportement des actionneurs testés sur l’installation",
           "command_interval": "Intervalle minimal entre commandes identiques",
           "ack_timeout": "Délai de confirmation d’un ordre",
           "sensor_max_age": "Âge maximal des mesures puissance / eau / protection",
@@ -212,7 +211,10 @@
         "title": "Pompe à chaleur et surveillance",
         "data": {
           "pump_entity": "Entité climate de la pompe à chaleur",
-          "pump_mode": "Mode natif à utiliser",
+          "pump_mode": "Mode natif attendu (surveillé, jamais commandé)",
+          "pump_normal_target": "Consigne PAC normale",
+          "pump_tempo_target": "Consigne PAC Tempo réduit",
+          "pump_solar_target": "Consigne PAC solaire",
           "pump_power_entity": "Puissance électrique PAC (W ou kW)",
           "water_in_entity": "Température entrée d’eau",
           "water_out_entity": "Température sortie d’eau",
@@ -267,11 +269,7 @@
           "control_enabled": "Permettre l’armement des commandes physiques",
           "hydraulic_confirmed": "Débit garanti indépendamment des têtes et du logiciel (validation installateur)",
           "exclusive_confirmed": "VTherm et tous les anciens pilotes sont désactivés",
-          "capabilities_confirmed": "Modes LG et comportement des actionneurs testés sur l’installation",
-          "min_on": "Durée minimale du mode chauffage PAC",
-          "min_off": "Durée minimale avant réactivation PAC",
-          "demand_delay": "Demande stable avant démarrage",
-          "drain_delay": "Circulation résiduelle après arrêt confirmé",
+          "capabilities_confirmed": "Consignes PAC et comportement des actionneurs testés sur l’installation",
           "command_interval": "Intervalle minimal entre commandes identiques",
           "ack_timeout": "Délai de confirmation d’un ordre",
           "sensor_max_age": "Âge maximal des mesures puissance / eau / protection",
@@ -429,7 +427,9 @@
           "suspended": "Commandes suspendues",
           "minimum_on": "Durée minimale de marche",
           "minimum_off": "Durée minimale d’arrêt",
-          "running": "Mode chauffage actif",
+          "running": "Régulation par consigne",
+          "pump_off": "PAC arrêtée — aucun ordre",
+          "adjusting_setpoint": "Attente confirmation consigne PAC",
           "starting": "Démarrage",
           "stopping": "Arrêt en cours",
           "idle": "Repos",
@@ -445,6 +445,9 @@
       },
       "pump_power": {
         "name": "Puissance électrique PAC"
+      },
+      "pump_target": {
+        "name": "Consigne PAC calculée"
       },
       "tempo": {
         "name": "Couleur Tempo",
@@ -511,6 +514,15 @@
       },
       "solar_target": {
         "name": "Consigne maximale solaire"
+      },
+      "pump_normal_target": {
+        "name": "Consigne PAC normale"
+      },
+      "pump_tempo_target": {
+        "name": "Consigne PAC Tempo réduit"
+      },
+      "pump_solar_target": {
+        "name": "Consigne PAC solaire"
       }
     },
     "select": {

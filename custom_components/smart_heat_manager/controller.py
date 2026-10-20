@@ -1,4 +1,4 @@
-"""Serial physical orchestration, acknowledgements and hydraulic sequencing."""
+"""Acknowledged emitters and heat-pump setpoints; never heat-pump mode commands."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from .adapters import Command, Transport, pump_plan
+from .adapters import Command, Transport, pump_temperature_plan
 from .emitters import emitter_plan, room_emitters
 from .models import Decision
 
@@ -41,9 +41,6 @@ class Controller:
         self.status = "observation"
         self.observed_on: bool | None = None
         self.transition = now
-        self.off_since = now
-        self.demand_since: datetime | None = None
-        self.held_open: dict[str, float] = {}
 
     def reset_fault(self) -> None:
         self.fault = None
@@ -83,13 +80,19 @@ class Controller:
         on = state is not None and state.available and state.state != "off"
         if self.observed_on is None or on != self.observed_on:
             self.transition = now
-            if not on:
-                self.off_since = now
             self.observed_on = on
         if not armed:
             self.status = "observation"
-            self.demand_since = None
             self.pending.clear()
+            return
+        # A temperature write can wake some devices. Send nothing when manually
+        # off, and never attempt to restore a previous mode, even for frost/solar.
+        if state is not None and state.state == "off":
+            self.status = "pump_off"
+            self.pending.clear()
+            return
+        if self.fault:
+            self.status = "command_fault"
             return
         self.check_pending(now, cfg["ack_timeout"])
         if self.fault:
@@ -100,82 +103,47 @@ class Controller:
             return
         try:
             # Check every capability before issuing any command.
-            pump = pump_plan(cfg["pump_entity"], state, cfg["pump_mode"], decision.pump_requested)
-            for room in config["rooms"]:
-                opening = decision.rooms[room["id"]].opening
-                for emitter in room_emitters(room):
-                    emitter_plan(
-                        emitter,
-                        self.transport,
-                        room,
-                        opening,
-                        valve_position_feature=self.valve_position_feature,
-                    )
-            if decision.pump_requested:
-                if self.demand_since is None:
-                    self.demand_since = now
-            else:
-                self.demand_since = None
-            requested = decision.pump_requested
-            elapsed = (now - self.transition).total_seconds()
-            if on and not requested and elapsed < cfg["min_on"]:
-                requested = True
-                self.status = "minimum_on"
-            elif (
-                not on
-                and requested
-                and (
-                    elapsed < cfg["min_off"]
-                    or self.demand_since is None
-                    or (now - self.demand_since).total_seconds() < cfg["demand_delay"]
-                )
-            ):
-                self.status = "minimum_off"
+            if decision.pump_target is None:
+                self.status = "suspended"
                 return
-            else:
-                self.status = (
-                    "running" if on and requested else "starting" if requested else "stopping" if on else "idle"
-                )
-            # Preserve the last openings during stop sequencing and circulation.
-            draining = not on and (now - self.off_since).total_seconds() < cfg["drain_delay"]
-            holding = (on and not decision.pump_requested) or draining
-            all_ready = True
+            pump = pump_temperature_plan(cfg["pump_entity"], state, cfg["pump_mode"], decision.pump_target)
+            plans = []
             for room in config["rooms"]:
                 opening = decision.rooms[room["id"]].opening
                 for emitter in room_emitters(room):
-                    if holding:
-                        opening_for_entity = max(opening, self.held_open.get(emitter.key, 0))
-                    else:
-                        opening_for_entity = opening
-                    # On rearm while PAC already enabled, unknown positions stay untouched
-                    # unless they need opening. Hydraulic bypass is independently required.
-                    if holding and emitter.key not in self.held_open and opening_for_entity == 0:
-                        continue
-                    commands = emitter_plan(
-                        emitter,
-                        self.transport,
-                        room,
-                        opening_for_entity,
-                        valve_position_feature=self.valve_position_feature,
+                    plans.append(
+                        emitter_plan(
+                            emitter,
+                            self.transport,
+                            room,
+                            opening,
+                            valve_position_feature=self.valve_position_feature,
+                        )
                     )
-                    for command in commands:
-                        ready = await self.apply(command, now, cfg["command_interval"])
-                        all_ready = all_ready and ready
-                        if not ready:
-                            break
-                    if opening_for_entity > 0:
-                        self.held_open[emitter.key] = opening_for_entity
-                    elif not holding:
-                        self.held_open.pop(emitter.key, None)
-            if requested and not on and not all_ready:
+            if any(
+                not self.transport.has_service(c.entity_id.split(".")[0], c.service)
+                for c in [pump, *(c for plan in plans for c in plan)]
+            ):
+                raise ValueError("service_missing")
+            all_ready = True
+            for commands in plans:
+                for command in commands:
+                    ready = await self.apply(command, now, cfg["command_interval"])
+                    all_ready = all_ready and ready
+                    if not ready:
+                        break
+            if not all_ready:
                 self.status = "opening_emitters"
                 return
-            pump = pump_plan(cfg["pump_entity"], state, cfg["pump_mode"], requested)
-            await self.apply(pump, now, cfg["command_interval"])
-            if draining and not requested:
-                self.status = "draining"
-            if not holding and not requested:
-                self.held_open.clear()
+            # Re-read mode after awaited head commands; never wake an externally
+            # stopped pump or overwrite a switch to cooling/another native mode.
+            current = self.transport.state(cfg["pump_entity"])
+            if current is not None and current.state == "off":
+                self.status = "pump_off"
+                return
+            pump = pump_temperature_plan(cfg["pump_entity"], current, cfg["pump_mode"], decision.pump_target)
+            ready = await self.apply(pump, now, cfg["command_interval"])
+            self.status = "running" if ready else "adjusting_setpoint"
         except ControlSuspended:
             self.status = "suspended"
         except Exception as err:  # Service implementations can raise third-party errors.

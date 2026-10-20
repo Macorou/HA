@@ -1,4 +1,4 @@
-# Smart Heat Manager — 0.1.2
+# Smart Heat Manager — 0.2.0
 
 Intégration personnalisée Home Assistant pour réguler des pièces à partir de
 sondes externes, coordonner une PAC existante et arbitrer Tempo EDF et surplus
@@ -11,7 +11,7 @@ session ; aucune compatibilité matérielle LG non vérifiée n'est annoncée.
 
 ## Installation locale
 
-1. Extraire `dist/smart_heat_manager-0.1.2.zip` dans le dossier de configuration HA.
+1. Extraire `dist/smart_heat_manager-0.2.0.zip` dans le dossier de configuration HA.
    Le chemin final doit être `config/custom_components/smart_heat_manager/manifest.json`.
 2. Redémarrer Home Assistant (version minimale déclarée : 2025.12).
 3. Ouvrir **Paramètres → Appareils et services → Ajouter une intégration → Smart Heat Manager**.
@@ -24,6 +24,29 @@ Les capteurs de puissance doivent publier des **W ou kW** instantanés, pas des 
 Les températures peuvent être en °C ou °F ; le moteur travaille en °C. Les actionneurs
 doivent être des `climate`, des `number` en pourcentage 0–100 ou des `valve` acceptant
 une position. Les sources LG officielles et SmartThinQ peuvent être combinées.
+
+### PAC autonome : consignes uniquement (0.2.0)
+
+La PAC conserve sa régulation native par la sonde du salon. SHM ne lui envoie
+**jamais** `turn_on`, `turn_off` ni `set_hvac_mode` : seul `set_temperature` est
+autorisé, même en Tempo, solaire ou hors-gel. Une PAC arrêtée manuellement ne
+reçoit aucune commande. Le mode natif attendu est surveillé, jamais sélectionné.
+
+Trois entités `number` permettent de changer les consignes sans modifier le code :
+**Consigne PAC normale**, **Consigne PAC Tempo réduit**, **Consigne PAC solaire**.
+Elles sont persistantes et respectent la plage et le pas exposés par la PAC.
+Valeurs initiales : 20 / 17 / 22 °C, à adapter avant tout armement.
+Le capteur **Consigne PAC calculée** expose la cible, même en observation.
+Sans demande des pièces, la consigne normale est conservée : aucun arrêt ni
+abaissement automatique. Tempo rouge HP utilise la cible réduite, sans garantir
+une consommation nulle ; solaire qualifié utilise la cible solaire si une pièce
+autorisée est en demande. Pause ou défaut : aucun ordre, dernière consigne conservée.
+
+Les anciens minima marche/arrêt et délais de circulation de SHM ne sont plus
+appliqués : ces fonctions restent natives à la PAC. Le débit minimal indépendant
+des têtes doit rester garanti, même quand toutes les pièces sont satisfaites.
+La sonde du salon peut limiter la chauffe des autres pièces : ouvrir une tête
+ne force pas le compresseur à démarrer. Ne pas étouffer le circuit de référence.
 
 ### Correctif 0.1.2 : température ambiante stable
 
@@ -47,7 +70,7 @@ Ne pas sélectionner ces mêmes entités dans « Autres têtes / vannes directes
 
 Les réglages sont coordonnés : ouverture `P`, fermeture `100−P` (30 % / 70 % par
 exemple). La fermeture complète demande 0 % / 100 %. Les deux réglages sont confirmés
-avant le mode Chauffage de la tête et avant un démarrage PAC. Il ne s'agit pas de
+avant le mode Chauffage de la tête et avant une consigne PAC. Il ne s'agit pas de
 deux radiateurs indépendants ni d'une mesure de position mécanique.
 
 Ce profil exige un [TRVZB compatible (micrologiciel 1.1.4 ou supérieur)](https://www.zigbee2mqtt.io/devices/TRVZB.html#valve-opening-degree-numeric).
@@ -93,16 +116,16 @@ signifient **arrêt des commandes**, et non extinction du chauffage.
 - Opt-in solaire par pièce, consigne solaire exposée en `number`, autorisation
   solaire rouge configurable. Une pièce exclue du solaire reste bloquée en rouge.
 - Vérification des capacités, commandes sérialisées, limitation de fréquence,
-  accusés par retour d'état, minima marche/arrêt et circulation résiduelle.
+  accusés par retour d'état et consignes PAC sans aucun ordre marche/arrêt.
 - Capteurs explicatifs, notifications de défaut et diagnostics anonymisés.
 - Simulateur hors ligne, tests unitaires et tests HA prévus pour Linux.
 
 ## Contrats matériels et limites
 
-La PAC est commandée uniquement via `climate.set_hvac_mode` (`heat` ou `auto`,
-et `off`). Le réglage de puissance compresseur, l'ECS, la coupure électrique et les
-consignes de loi d'eau ne sont pas commandés. Le minimum marche/arrêt porte sur le
-**mode chauffage HA**, pas sur une mesure du compresseur.
+La PAC reçoit uniquement une température ambiante via `climate.set_temperature`,
+jamais une commande de mode ni d'allumage/extinction. Le réglage de puissance
+compresseur, l'ECS, la coupure électrique et la loi d'eau ne sont pas commandés.
+La PAC conserve la modulation, les anti-cycles et la circulation native.
 
 Une tête `climate` reçoit une consigne haute en demande et basse hors demande,
 bornées à ses capacités. Cela exige une calibration : son retour de consigne

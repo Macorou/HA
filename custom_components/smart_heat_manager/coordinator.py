@@ -17,7 +17,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from .adapters import EntityState, pump_plan
+from .adapters import EntityState, pump_target_value, pump_temperature_plan
 from .const import DOMAIN, MODES
 from .controller import Controller
 from .emitters import emitter_plan, room_actuator_entities, room_emitters
@@ -29,8 +29,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class HATransport:
-    def __init__(self, hass):
+    def __init__(self, hass, pump_entity, pump_mode):
         self.hass = hass
+        self.pump_entity = pump_entity
+        self.pump_mode = pump_mode
 
     def state(self, entity_id):
         state = self.hass.states.get(entity_id)
@@ -49,6 +51,11 @@ class HATransport:
         return self.hass.services.has_service(domain, service)
 
     async def send(self, command):
+        if command.entity_id == self.pump_entity:
+            if command.service != "set_temperature" or command.field != "temperature":
+                raise HomeAssistantError("Heat pump is setpoint-only; mode/on/off commands are forbidden.")
+            # Last-boundary validation, including a manual stop during head IO.
+            pump_temperature_plan(self.pump_entity, self.state(self.pump_entity), self.pump_mode, float(command.value))
         domain = command.entity_id.split(".", 1)[0]
         _LOGGER.info(
             "Command %s.%s to %s: %s=%s", domain, command.service, command.entity_id, command.field, command.value
@@ -68,7 +75,7 @@ class HeatCoordinator(DataUpdateCoordinator):
         self.config = effective_config(entry.data, entry.options)
         validate_config(self.config)
         self.engine = Engine()
-        self.transport = HATransport(hass)
+        self.transport = HATransport(hass, self.config["settings"]["pump_entity"], self.config["settings"]["pump_mode"])
         self.controller = Controller(
             self.transport, dt_util.now(), int(ValveEntityFeature.SET_POSITION), self.permit_commands
         )
@@ -298,6 +305,11 @@ class HeatCoordinator(DataUpdateCoordinator):
                 raise HomeAssistantError("Température hors limites")
             self.runtime.setdefault("room_solar_target", {})[room_id] = value
         else:
+            if key in ("pump_normal_target", "pump_tempo_target", "pump_solar_target"):
+                try:
+                    pump_target_value(self.transport.state(self.settings["pump_entity"]), value)
+                except ValueError as err:
+                    raise HomeAssistantError(f"Consigne PAC incompatible : {err}") from err
             candidate = self.settings | {key: value}
             try:
                 validate_config({"settings": candidate, "rooms": self.config["rooms"]})
@@ -343,13 +355,15 @@ class HeatCoordinator(DataUpdateCoordinator):
             raise HomeAssistantError("Résoudre les défauts avant l'armement.")
         try:
             commands = [
-                pump_plan(
+                pump_temperature_plan(
                     self.settings["pump_entity"],
                     self.transport.state(self.settings["pump_entity"]),
                     self.settings["pump_mode"],
-                    False,
+                    self.settings["pump_normal_target"],
                 )
             ]
+            for key in ("pump_tempo_target", "pump_solar_target"):
+                pump_target_value(self.transport.state(self.settings["pump_entity"]), self.settings[key])
             for room in self.config["rooms"]:
                 for emitter in room_emitters(room):
                     commands.extend(

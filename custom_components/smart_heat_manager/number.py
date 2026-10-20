@@ -10,6 +10,9 @@ from .entity import HeatEntity
 
 PARALLEL_UPDATES = 0
 RANGES = {
+    "pump_normal_target": (5, 35, 0.1, "°C"),
+    "pump_tempo_target": (5, 35, 0.1, "°C"),
+    "pump_solar_target": (5, 35, 0.1, "°C"),
     "solar_start": (0, 20000, 50, "W"),
     "solar_hold": (0, 20000, 50, "W"),
     "solar_margin": (0, 5000, 50, "W"),
@@ -41,6 +44,25 @@ class HeatNumber(HeatEntity, NumberEntity):
             self._attr_native_step,
             self._attr_native_unit_of_measurement,
         ) = RANGES[key]
+
+    @property
+    def native_min_value(self):
+        return self.pump_bound("min_temp", self._attr_native_min_value)
+
+    @property
+    def native_max_value(self):
+        return self.pump_bound("max_temp", self._attr_native_max_value)
+
+    @property
+    def native_step(self):
+        return self.pump_bound("target_temp_step", self._attr_native_step)
+
+    def pump_bound(self, attribute, fallback):
+        if self.key.startswith("pump_"):
+            state = self.coordinator.transport.state(self.coordinator.settings["pump_entity"])
+            if state is not None:
+                return state.attributes.get(attribute) or fallback
+        return fallback
 
     @property
     def native_value(self):

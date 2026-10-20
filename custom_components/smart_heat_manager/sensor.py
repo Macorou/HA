@@ -1,12 +1,22 @@
 """Concise global decision sensors (room climate already exposes temperatures)."""
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
-from homeassistant.const import UnitOfPower
+from homeassistant.const import UnitOfPower, UnitOfTemperature
 
 from .entity import HeatEntity
 
 PARALLEL_UPDATES = 0
-SENSORS = ["decision", "reason", "controller", "surplus", "solar_budget", "pump_power", "tempo", "demand_count"]
+SENSORS = [
+    "decision",
+    "reason",
+    "controller",
+    "surplus",
+    "solar_budget",
+    "pump_power",
+    "tempo",
+    "demand_count",
+    "pump_target",
+]
 ENUMS = {
     "decision": ["fault", "paused", "frost", "tempo_blocked", "heating", "solar_heating", "idle"],
     "controller": [
@@ -21,6 +31,8 @@ ENUMS = {
         "idle",
         "opening_emitters",
         "draining",
+        "pump_off",
+        "adjusting_setpoint",
     ],
     "tempo": ["red", "white", "blue", "unknown"],
 }
@@ -41,6 +53,9 @@ class HeatSensor(HeatEntity, SensorEntity):
             self._attr_native_unit_of_measurement = UnitOfPower.WATT
             self._attr_device_class = SensorDeviceClass.POWER
             self._attr_state_class = SensorStateClass.MEASUREMENT
+        if key == "pump_target":
+            self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+            self._attr_device_class = SensorDeviceClass.TEMPERATURE
 
     @property
     def native_value(self):
@@ -54,6 +69,7 @@ class HeatSensor(HeatEntity, SensorEntity):
             "pump_power": self.coordinator.snapshot.pump_power,
             "tempo": decision.tempo,
             "demand_count": sum(room.demand for room in decision.rooms.values()),
+            "pump_target": decision.pump_target,
         }[self.key]
 
     @property
@@ -64,5 +80,7 @@ class HeatSensor(HeatEntity, SensorEntity):
                 "armed": self.coordinator.armed,
                 "faults": self.coordinator.data.faults,
                 "pump_observed_on": self.coordinator.snapshot.pump_on,
+                "pump_control_policy": "setpoint_only",
+                "pump_requested_temperature": self.coordinator.data.pump_target,
             }
         return None

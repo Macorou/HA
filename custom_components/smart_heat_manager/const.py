@@ -1,11 +1,14 @@
 """Configuration keys and conservative defaults (seconds, watts, Celsius)."""
 
 DOMAIN = "smart_heat_manager"
-VERSION = "0.1.2"
+VERSION = "0.2.0"
 PLATFORMS = ["climate", "sensor", "binary_sensor", "switch", "number", "select", "button"]
 MODES = ["auto", "present", "absent", "night", "holiday", "manual"]
 DEFAULTS = {
     "pump_mode": "heat",
+    "pump_normal_target": 20.0,
+    "pump_tempo_target": 17.0,
+    "pump_solar_target": 22.0,
     "presence_enabled": False,
     "presence_delay": 300,
     "tempo_enabled": False,
@@ -26,10 +29,6 @@ DEFAULTS = {
     "solar_delay": 300,
     "solar_min_on": 900,
     "solar_stop_delay": 300,
-    "min_on": 1200,
-    "min_off": 600,
-    "demand_delay": 120,
-    "drain_delay": 180,
     "command_interval": 60,
     "ack_timeout": 180,
     "sensor_max_age": 3600,

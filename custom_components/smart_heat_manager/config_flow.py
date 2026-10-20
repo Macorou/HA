@@ -38,6 +38,9 @@ SECTIONS = {
         "pump_mode": selector.SelectSelector(
             selector.SelectSelectorConfig(options=["heat", "auto"], translation_key="pump_mode")
         ),
+        "pump_normal_target": number(5, 35, 0.1, "°C"),
+        "pump_tempo_target": number(5, 35, 0.1, "°C"),
+        "pump_solar_target": number(5, 35, 0.1, "°C"),
         "pump_power_entity": POWER,
         "water_in_entity": TEMP,
         "water_out_entity": TEMP,
@@ -81,10 +84,6 @@ SECTIONS = {
         "hydraulic_confirmed": BOOL,
         "exclusive_confirmed": BOOL,
         "capabilities_confirmed": BOOL,
-        "min_on": number(300, 14400, unit="s"),
-        "min_off": number(300, 14400, unit="s"),
-        "demand_delay": number(0, 3600, unit="s"),
-        "drain_delay": number(60, 3600, unit="s"),
         "command_interval": number(15, 900, unit="s"),
         "ack_timeout": number(30, 1800, unit="s"),
         "sensor_max_age": number(60, 86400, unit="s"),
