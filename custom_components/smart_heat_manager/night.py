@@ -1,10 +1,15 @@
 """Daily night window in Home Assistant's local wall-clock time."""
 
 from datetime import datetime, time
+from re import fullmatch
 
 
 def clock_time(value: str) -> time:
     """Accept a local time only, without offsets or fractional seconds."""
+    # Python versions differ on accepting ISO 24:00:00 and normalizing to midnight.
+    # Keep exactly the same unambiguous 00:00..23:59 clock on every HA version.
+    if not isinstance(value, str) or not fullmatch(r"(?:[01][0-9]|2[0-3]):[0-5][0-9](?::[0-5][0-9])?", value):
+        raise ValueError("night_time_invalid")
     try:
         parsed = time.fromisoformat(value)
     except (TypeError, ValueError) as err:
