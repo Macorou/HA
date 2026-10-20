@@ -1,5 +1,8 @@
 """Lifecycle, native entities, events, commands and graphical flow on real HA."""
 
+from datetime import timedelta
+from unittest.mock import AsyncMock
+
 import pytest
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
@@ -40,6 +43,75 @@ async def test_sensor_loss_and_recovery(hass, installation):
     hass.states.async_set("sensor.living", "19", {"unit_of_measurement": "°C"})
     await c.async_evaluate()
     assert c.data.state == "heating"
+
+
+async def test_stable_room_temperature_does_not_expire(hass, installation, freezer):
+    """An unchanged MQTT temperature is not evidence of a disconnected probe."""
+    c = await setup(hass, installation)
+    c.transport.send = AsyncMock()
+    original = hass.states.get("sensor.living")
+    freezer.tick(timedelta(hours=2))
+    await c.async_evaluate()
+    assert hass.states.get("sensor.living").last_reported == original.last_reported
+    assert c.snapshot.temperatures["living"] == 19
+    assert "room_sensor_unavailable" not in c.data.faults
+    registry = er.async_get(hass)
+    entity_id = registry.async_get_entity_id("climate", DOMAIN, f"{installation.entry_id}_room_living_climate")
+    assert hass.states.get(entity_id).state != "unavailable"
+    assert hass.states.get(entity_id).attributes["current_temperature"] == 19
+    # Power freshness is intentionally unchanged; the stale grid is unusable.
+    assert c.snapshot.grid is None
+    assert c.data.surplus is None
+    assert not c.armed
+    assert c.controller.status == "observation"
+    c.transport.send.assert_not_awaited()
+
+
+@pytest.mark.parametrize("value", [None, "unavailable", "unknown", "invalid", "nan", "inf", "101", "-41"])
+async def test_room_sensor_invalid_after_stable_period_fails_closed(hass, installation, freezer, value):
+    c = await setup(hass, installation)
+    c.transport.send = AsyncMock()
+    freezer.tick(timedelta(hours=2))
+    if value is None:
+        hass.states.async_remove("sensor.living")
+    else:
+        hass.states.async_set("sensor.living", value, {"unit_of_measurement": "°C"})
+    await c.async_evaluate()
+    assert "room_sensor_unavailable" in c.data.faults
+    assert not c.data.pump_requested
+    registry = er.async_get(hass)
+    entity_id = registry.async_get_entity_id("climate", DOMAIN, f"{installation.entry_id}_room_living_climate")
+    assert hass.states.get(entity_id).state == "unavailable"
+    c.armed = True
+    assert not c.permit_commands()
+    c.armed = False
+    c.transport.send.assert_not_awaited()
+    hass.states.async_set("sensor.living", "19", {"unit_of_measurement": "°C"})
+    await c.async_evaluate()
+    assert "room_sensor_unavailable" not in c.data.faults
+    assert hass.states.get(entity_id).state != "unavailable"
+    c.transport.send.assert_not_awaited()
+
+
+@pytest.mark.parametrize("key", ["water_in_entity", "water_out_entity", "protection_entity"])
+async def test_stale_monitoring_still_fails_closed(hass, installation, freezer, key):
+    entity_id = "binary_sensor.protection" if key == "protection_entity" else "sensor.water"
+    hass.states.async_set(entity_id, "off" if key == "protection_entity" else "35", {"unit_of_measurement": "°C"})
+    hass.config_entries.async_update_entry(
+        installation, data=installation.data | {"settings": installation.data["settings"] | {key: entity_id}}
+    )
+    c = await setup(hass, installation)
+    assert not c.snapshot.monitoring_fault
+    c.transport.send = AsyncMock()
+    freezer.tick(timedelta(hours=2))
+    await c.async_evaluate()
+    assert c.snapshot.temperatures["living"] == 19
+    assert "monitor_unavailable" in c.data.faults
+    assert not c.data.pump_requested
+    c.armed = True
+    assert not c.permit_commands()
+    c.armed = False
+    c.transport.send.assert_not_awaited()
 
 
 async def test_units_and_grid_sign(hass, installation):

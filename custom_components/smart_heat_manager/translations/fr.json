@@ -74,7 +74,7 @@
           "drain_delay": "Circulation résiduelle après arrêt confirmé",
           "command_interval": "Intervalle minimal entre commandes identiques",
           "ack_timeout": "Délai de confirmation d’un ordre",
-          "sensor_max_age": "Âge maximal des données reçues",
+          "sensor_max_age": "Âge maximal des mesures puissance / eau / protection",
           "water_max": "Seuil haut d’eau : suspendre les commandes"
         },
         "description": "Le débit doit être garanti par l’hydraulique indépendamment des têtes. Les commandes reprennent uniquement après armement explicite, à chaque redémarrage. Une suspension conserve les états physiques ; les protections natives restent indispensables."
@@ -274,7 +274,7 @@
           "drain_delay": "Circulation résiduelle après arrêt confirmé",
           "command_interval": "Intervalle minimal entre commandes identiques",
           "ack_timeout": "Délai de confirmation d’un ordre",
-          "sensor_max_age": "Âge maximal des données reçues",
+          "sensor_max_age": "Âge maximal des mesures puissance / eau / protection",
           "water_max": "Seuil haut d’eau : suspendre les commandes"
         },
         "description": "Le débit doit être garanti par l’hydraulique indépendamment des têtes. Les commandes reprennent uniquement après armement explicite, à chaque redémarrage. Une suspension conserve les états physiques ; les protections natives restent indispensables."

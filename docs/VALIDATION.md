@@ -40,7 +40,7 @@ les publier sans vérification.
 
 | Motif | Vérification |
 | --- | --- |
-| `room_sensor_unavailable` | Disponibilité, unité °C/°F, ancienneté de la sonde externe |
+| `room_sensor_unavailable` | Disponibilité déclarée par la source, unité °C/°F, valeur valide de la sonde externe |
 | `pump_unavailable` | Intégration LG, cloud et état climate |
 | `actuator_unavailable` | Disponibilité de toutes les têtes configurées |
 | `hardware_protection` | Signal ON choisi dans Protection ; respecter le fonctionnement natif |
@@ -55,6 +55,16 @@ les publier sans vérification.
 `minimum_off`, `minimum_on`, `opening_emitters`, `stopping` et `draining` sont des
 états de séquencement normaux. L'interrupteur de restriction Tempo indique la fenêtre
 tarifaire, même si une dérogation ou le hors-gel autorise exceptionnellement une demande.
+
+### Régression : température stable (0.1.2)
+
+Une pièce doit rester disponible après plus d'une heure à température identique,
+tant que la sonde reste disponible dans HA. Simuler ensuite un état `unavailable`,
+`unknown`, absent ou invalide sur une sonde fictive : le thermostat doit devenir
+indisponible, la demande PAC doit être annulée et les commandes bloquées. Le retour
+à une mesure valide restaure le thermostat, sans armer le pilotage.
+Les mesures de puissance et la surveillance de l'eau/protection doivent toujours
+être rejetées après leur délai maximal. Ces scénarios sont couverts dans `tests/ha`.
 
 ## Retrait et restauration
 

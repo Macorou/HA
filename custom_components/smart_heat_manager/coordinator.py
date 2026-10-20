@@ -147,8 +147,8 @@ class HeatCoordinator(DataUpdateCoordinator):
         state = self.fresh_state(self.settings.get(key), max_age=age)
         return state.state if state else None
 
-    def numeric(self, entity_id, kind, allow_negative=False):
-        state = self.fresh_state(entity_id)
+    def numeric(self, entity_id, kind, allow_negative=False, *, max_age=None):
+        state = self.fresh_state(entity_id, max_age=max_age)
         if state is None:
             return None
         raw = state.attributes.get("current_temperature") if state.domain == "climate" else state.state
@@ -178,7 +178,10 @@ class HeatCoordinator(DataUpdateCoordinator):
     def build_snapshot(self):
         cfg = self.settings
         pump = self.fresh_state(cfg["pump_entity"], max_age=0)
-        temps = {r["id"]: self.numeric(r["sensor"], "temperature") for r in self.config["rooms"]}
+        # Room sensors may suppress identical readings. Their HA timestamps are
+        # not device heartbeats: trust the source integration's availability,
+        # while retaining unit/range validation and strict ages for monitoring.
+        temps = {r["id"]: self.numeric(r["sensor"], "temperature", max_age=0) for r in self.config["rooms"]}
         protection = self.text("protection_entity")
         monitors = [key for key in ("protection_entity", "water_in_entity", "water_out_entity") if cfg.get(key)]
         monitor_fault = any(self.fresh_state(cfg[key]) is None for key in monitors)

@@ -1,4 +1,4 @@
-# Smart Heat Manager — 0.1.1
+# Smart Heat Manager — 0.1.2
 
 Intégration personnalisée Home Assistant pour réguler des pièces à partir de
 sondes externes, coordonner une PAC existante et arbitrer Tempo EDF et surplus
@@ -11,7 +11,7 @@ session ; aucune compatibilité matérielle LG non vérifiée n'est annoncée.
 
 ## Installation locale
 
-1. Extraire `dist/smart_heat_manager-0.1.1.zip` dans le dossier de configuration HA.
+1. Extraire `dist/smart_heat_manager-0.1.2.zip` dans le dossier de configuration HA.
    Le chemin final doit être `config/custom_components/smart_heat_manager/manifest.json`.
 2. Redémarrer Home Assistant (version minimale déclarée : 2025.12).
 3. Ouvrir **Paramètres → Appareils et services → Ajouter une intégration → Smart Heat Manager**.
@@ -24,6 +24,18 @@ Les capteurs de puissance doivent publier des **W ou kW** instantanés, pas des 
 Les températures peuvent être en °C ou °F ; le moteur travaille en °C. Les actionneurs
 doivent être des `climate`, des `number` en pourcentage 0–100 ou des `valve` acceptant
 une position. Les sources LG officielles et SmartThinQ peuvent être combinées.
+
+### Correctif 0.1.2 : température ambiante stable
+
+Une température de pièce inchangée ne devient plus périmée au bout d'une heure.
+La disponibilité déclarée par l'intégration de la sonde fait foi : les états
+`unknown`, `unavailable`, absents ou les mesures invalides restent bloquants.
+Activer la détection de disponibilité de la source (par exemple Zigbee2MQTT) :
+SHM ne peut pas déduire la connexion d'une sonde de son seul changement de température.
+Le délai de détection d'une perte dépend de cette source, pas de SHM.
+Les délais des mesures de puissance, de l'eau et des protections restent inchangés.
+Mettre à jour les fichiers puis redémarrer HA ; les pièces sont conservées et les
+commandes restent désarmées après redémarrage. Aucun changement de réglage requis.
 
 ### Têtes SONOFF TRVZB : deux réglages de vanne
 

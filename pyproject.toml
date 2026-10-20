@@ -1,6 +1,6 @@
 [project]
 name = "smart-heat-manager"
-version = "0.1.1"
+version = "0.1.2"
 description = "Home Assistant room heating, Tempo and photovoltaic orchestration"
 requires-python = ">=3.12"
 license = "MIT"

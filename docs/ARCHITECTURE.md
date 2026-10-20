@@ -1,6 +1,6 @@
 # Architecture et plan de réalisation
 
-Smart Heat Manager 0.1.1 est une intégration locale d'orchestration : elle exploite
+Smart Heat Manager 0.1.2 est une intégration locale d'orchestration : elle exploite
 les états et services des intégrations déjà installées, sans identifiants LG,
 sans dépendance VTherm et sans accès direct au cloud.
 

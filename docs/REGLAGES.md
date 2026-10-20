@@ -115,11 +115,18 @@ conservées pendant le minimum marche, l'arrêt confirmé et le délai de circul
 
 Les ordres non appliqués sont signalés, sans boucle de tentatives. Le bouton
 Acquitter efface le verrou de commande et désarme ; vérifier la cause puis réarmer.
-La disponibilité des capteurs utilise la date du dernier rapport reçu, y compris
-si sa valeur est restée stable. Le délai maximal est configurable.
+Les sondes de température des pièces utilisent la disponibilité déclarée par leur
+intégration source, sans expiration sur l'horodatage HA : une sonde MQTT peut émettre
+une valeur identique sans actualiser cet horodatage. Les états absents, `unknown`,
+`unavailable`, les unités incompatibles et les températures invalides restent
+bloquants. Activer et vérifier la détection de disponibilité dans l'intégration
+source (par exemple Zigbee2MQTT). Son délai de détection dépend de sa configuration ;
+SHM ne dispose pas d'un heartbeat matériel à partir du seul état de température.
 
-Ce délai concerne les mesures de température/puissance et la surveillance. Les
-couleurs Tempo disposent de 48 h puisqu'elles changent quotidiennement ; les helpers
-statiques HA restent valides tant qu'ils sont disponibles. La PAC et les têtes sont
-contrôlées par leur disponibilité déclarée par leur intégration. Les temporisations
-sont calculées en UTC pour rester correctes lors des changements d'heure.
+Le délai maximal configurable utilise le dernier rapport HA pour les mesures de
+puissance et la surveillance (températures d'eau et protection). Il n'est pas étendu
+par ce correctif. Les couleurs Tempo disposent de 48 h puisqu'elles changent
+quotidiennement ; les helpers statiques HA restent valides tant qu'ils sont
+disponibles. La PAC et les têtes sont contrôlées par leur disponibilité déclarée
+par leur intégration. Les temporisations sont calculées en UTC pour rester
+correctes lors des changements d'heure.

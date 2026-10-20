@@ -74,7 +74,7 @@
           "drain_delay": "Run-on delay after confirmed off",
           "command_interval": "Minimum command interval",
           "ack_timeout": "Command acknowledgement timeout",
-          "sensor_max_age": "Maximum age of received data",
+          "sensor_max_age": "Maximum age of power / water / protection readings",
           "water_max": "High water threshold: suspend commands"
         },
         "description": "Independent hydraulic flow is required. Physical control must be armed after each restart. Suspension preserves physical states; native protections remain essential."
@@ -274,7 +274,7 @@
           "drain_delay": "Run-on delay after confirmed off",
           "command_interval": "Minimum command interval",
           "ack_timeout": "Command acknowledgement timeout",
-          "sensor_max_age": "Maximum age of received data",
+          "sensor_max_age": "Maximum age of power / water / protection readings",
           "water_max": "High water threshold: suspend commands"
         },
         "description": "Independent hydraulic flow is required. Physical control must be armed after each restart. Suspension preserves physical states; native protections remain essential."
