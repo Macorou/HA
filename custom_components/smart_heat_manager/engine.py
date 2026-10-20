@@ -1,5 +1,6 @@
 """Explicit state arbitration. No Home Assistant dependency and no I/O."""
 
+from .const import PUMP_MODE_TARGETS
 from .models import Decision, Snapshot, active_override
 from .presence import Presence
 from .regulation import regulate
@@ -95,16 +96,19 @@ class Engine:
             state, reason = "idle", "no_demand"
         pump_target = None
         if not faults and not paused:
-            # No room demand does NOT stop or lower the autonomous heat pump.
-            pump_target = cfg[
-                "pump_tempo_target"
-                if state == "tempo_blocked"
-                else "pump_solar_target"
-                if state == "solar_heating"
-                else "pump_normal_target"
-            ]
+            # Follow the same effective profile as the rooms, not their demand.
+            # No room demand never implies turning off the autonomous heat pump.
+            pump_target = cfg[PUMP_MODE_TARGETS[mode]]
+            if cfg["tempo_enabled"]:
+                pump_target += cfg["white_delta"] if today == "white" else cfg["red_delta"] if today == "red" else 0
+            if state == "tempo_blocked":
+                pump_target = min(pump_target, cfg["pump_tempo_target"])
+            elif state == "solar_heating":
+                pump_target = max(pump_target, cfg["pump_solar_target"])
             if anticipatory and state != "tempo_blocked":
                 pump_target = max(pump_target, min(cfg["pump_solar_target"], pump_target + cfg["preheat_delta"]))
+            if force:
+                pump_target = max(pump_target, cfg["pump_normal_target"])
         return Decision(
             state,
             reason,

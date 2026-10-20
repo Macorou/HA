@@ -13,7 +13,11 @@
         "data": {
           "pump_entity": "Heat pump climate entity",
           "pump_mode": "Expected native mode (monitored, never commanded)",
-          "pump_normal_target": "Normal heat pump setpoint",
+          "pump_normal_target": "Present heat pump setpoint",
+          "pump_absent_target": "Away heat pump setpoint",
+          "pump_night_target": "Night heat pump setpoint",
+          "pump_holiday_target": "Holiday heat pump setpoint",
+          "pump_manual_target": "Manual heat pump setpoint",
           "pump_tempo_target": "Reduced Tempo heat pump setpoint",
           "pump_solar_target": "Solar heat pump setpoint",
           "pump_power_entity": "Heat pump electrical power (W or kW)",
@@ -212,7 +216,11 @@
         "data": {
           "pump_entity": "Heat pump climate entity",
           "pump_mode": "Expected native mode (monitored, never commanded)",
-          "pump_normal_target": "Normal heat pump setpoint",
+          "pump_normal_target": "Present heat pump setpoint",
+          "pump_absent_target": "Away heat pump setpoint",
+          "pump_night_target": "Night heat pump setpoint",
+          "pump_holiday_target": "Holiday heat pump setpoint",
+          "pump_manual_target": "Manual heat pump setpoint",
           "pump_tempo_target": "Reduced Tempo heat pump setpoint",
           "pump_solar_target": "Solar heat pump setpoint",
           "pump_power_entity": "Heat pump electrical power (W or kW)",
@@ -516,7 +524,19 @@
         "name": "Solar temperature ceiling"
       },
       "pump_normal_target": {
-        "name": "Normal heat pump setpoint"
+        "name": "Present heat pump setpoint"
+      },
+      "pump_absent_target": {
+        "name": "Away heat pump setpoint"
+      },
+      "pump_night_target": {
+        "name": "Night heat pump setpoint"
+      },
+      "pump_holiday_target": {
+        "name": "Holiday heat pump setpoint"
+      },
+      "pump_manual_target": {
+        "name": "Manual heat pump setpoint"
       },
       "pump_tempo_target": {
         "name": "Reduced Tempo heat pump setpoint"

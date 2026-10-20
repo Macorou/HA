@@ -6,13 +6,12 @@ from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.const import EntityCategory
 from homeassistant.exceptions import HomeAssistantError
 
+from .const import PUMP_TARGET_KEYS
 from .entity import HeatEntity
 
 PARALLEL_UPDATES = 0
 RANGES = {
-    "pump_normal_target": (5, 35, 0.1, "°C"),
-    "pump_tempo_target": (5, 35, 0.1, "°C"),
-    "pump_solar_target": (5, 35, 0.1, "°C"),
+    **{key: (5, 35, 0.1, "°C") for key in PUMP_TARGET_KEYS},
     "solar_start": (0, 20000, 50, "W"),
     "solar_hold": (0, 20000, 50, "W"),
     "solar_margin": (0, 5000, 50, "W"),

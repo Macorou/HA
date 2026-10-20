@@ -74,6 +74,12 @@ class HeatSensor(HeatEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self):
+        if self.key == "pump_target":
+            return {
+                "effective_profile": self.coordinator.data.mode,
+                "pump_control_policy": "setpoint_only",
+                "observation": not self.coordinator.armed,
+            }
         if self.key == "decision":
             return {
                 "mode": self.coordinator.data.mode,

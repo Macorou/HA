@@ -18,7 +18,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .adapters import EntityState, pump_target_value, pump_temperature_plan
-from .const import DOMAIN, MODES
+from .const import DOMAIN, MODES, PUMP_TARGET_KEYS
 from .controller import Controller
 from .emitters import emitter_plan, room_actuator_entities, room_emitters
 from .engine import Engine
@@ -305,7 +305,7 @@ class HeatCoordinator(DataUpdateCoordinator):
                 raise HomeAssistantError("Température hors limites")
             self.runtime.setdefault("room_solar_target", {})[room_id] = value
         else:
-            if key in ("pump_normal_target", "pump_tempo_target", "pump_solar_target"):
+            if key in PUMP_TARGET_KEYS:
                 try:
                     pump_target_value(self.transport.state(self.settings["pump_entity"]), value)
                 except ValueError as err:
@@ -362,7 +362,7 @@ class HeatCoordinator(DataUpdateCoordinator):
                     self.settings["pump_normal_target"],
                 )
             ]
-            for key in ("pump_tempo_target", "pump_solar_target"):
+            for key in PUMP_TARGET_KEYS:
                 pump_target_value(self.transport.state(self.settings["pump_entity"]), self.settings[key])
             for room in self.config["rooms"]:
                 for emitter in room_emitters(room):

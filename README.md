@@ -1,4 +1,4 @@
-# Smart Heat Manager — 0.2.0
+# Smart Heat Manager — 0.2.1
 
 Intégration personnalisée Home Assistant pour réguler des pièces à partir de
 sondes externes, coordonner une PAC existante et arbitrer Tempo EDF et surplus
@@ -11,7 +11,7 @@ session ; aucune compatibilité matérielle LG non vérifiée n'est annoncée.
 
 ## Installation locale
 
-1. Extraire `dist/smart_heat_manager-0.2.0.zip` dans le dossier de configuration HA.
+1. Extraire `dist/smart_heat_manager-0.2.1.zip` dans le dossier de configuration HA.
    Le chemin final doit être `config/custom_components/smart_heat_manager/manifest.json`.
 2. Redémarrer Home Assistant (version minimale déclarée : 2025.12).
 3. Ouvrir **Paramètres → Appareils et services → Ajouter une intégration → Smart Heat Manager**.
@@ -32,15 +32,24 @@ La PAC conserve sa régulation native par la sonde du salon. SHM ne lui envoie
 autorisé, même en Tempo, solaire ou hors-gel. Une PAC arrêtée manuellement ne
 reçoit aucune commande. Le mode natif attendu est surveillé, jamais sélectionné.
 
-Trois entités `number` permettent de changer les consignes sans modifier le code :
-**Consigne PAC normale**, **Consigne PAC Tempo réduit**, **Consigne PAC solaire**.
-Elles sont persistantes et respectent la plage et le pas exposés par la PAC.
-Valeurs initiales : 20 / 17 / 22 °C, à adapter avant tout armement.
+Les consignes PAC sont des entités `number` persistantes, modifiables sans code :
+**présence**, **absence**, **nuit**, **vacances**, **manuel**, **Tempo réduit** et
+**solaire**. Valeurs initiales : 20 / 17 / 18 / 16 / 20 / 17 / 22 °C, à adapter
+avant l'armement dans les limites et le pas exposés par la PAC.
+La PAC suit le même mode effectif que les pièces. En automatique, la présence
+temporisée choisit présence/absence si elle est configurée ; sinon présence.
+Les autres profils se choisissent avec le mode général temporaire, dont la durée
+est réglable. À l'échéance, retour automatique, comme pour les pièces.
+L'ancien réglage « normale » devient « présence » : identifiant et valeur conservés.
 Le capteur **Consigne PAC calculée** expose la cible, même en observation.
-Sans demande des pièces, la consigne normale est conservée : aucun arrêt ni
-abaissement automatique. Tempo rouge HP utilise la cible réduite, sans garantir
+Sans demande des pièces, la consigne du profil actif est conservée : aucun arrêt ni
+abaissement automatique. Tempo rouge HP plafonne cette consigne à la cible réduite, sans garantir
 une consommation nulle ; solaire qualifié utilise la cible solaire si une pièce
-autorisée est en demande. Pause ou défaut : aucun ordre, dernière consigne conservée.
+autorisée est en demande, sans abaisser une cible de profil plus élevée.
+Les corrections blanc/rouge et le forçage général s'appliquent aussi à la PAC.
+Ils doivent rester compatibles avec la plage et le pas natifs (sinon commandes
+suspendues, pas de consigne arrondie en silence).
+Pause ou défaut : aucun ordre, dernière consigne conservée.
 
 Les anciens minima marche/arrêt et délais de circulation de SHM ne sont plus
 appliqués : ces fonctions restent natives à la PAC. Le débit minimal indépendant

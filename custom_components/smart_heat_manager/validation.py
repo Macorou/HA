@@ -2,6 +2,7 @@
 
 from math import isfinite
 
+from .const import PUMP_TARGET_KEYS
 from .emitters import room_actuator_entities
 
 
@@ -25,10 +26,7 @@ def validate_config(config: dict) -> None:
         raise ValueError("confirmations_required")
     if cfg["pump_mode"] not in ("heat", "auto"):
         raise ValueError("pump_mode_not_supported")
-    if any(
-        not isfinite(cfg[key]) or not 5 <= cfg[key] <= 35
-        for key in ("pump_normal_target", "pump_tempo_target", "pump_solar_target")
-    ):
+    if any(not isfinite(cfg[key]) or not 5 <= cfg[key] <= 35 for key in PUMP_TARGET_KEYS):
         raise ValueError("temperature_invalid")
     outputs = [cfg["pump_entity"]]
     for room in rooms:

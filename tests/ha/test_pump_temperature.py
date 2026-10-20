@@ -36,7 +36,16 @@ async def test_pump_numbers_editable_persistent_and_native_bounded(hass, install
     c = await setup(hass, installation)
     c.transport.send = AsyncMock()
     registry = er.async_get(hass)
-    for key, value in (("pump_normal_target", 21), ("pump_tempo_target", 18), ("pump_solar_target", 24)):
+    targets = {
+        "pump_normal_target": 21,
+        "pump_tempo_target": 18,
+        "pump_solar_target": 24,
+        "pump_absent_target": 17,
+        "pump_night_target": 19,
+        "pump_holiday_target": 16,
+        "pump_manual_target": 22,
+    }
+    for key, value in targets.items():
         entity_id = registry.async_get_entity_id("number", DOMAIN, f"{installation.entry_id}_{key}")
         state = hass.states.get(entity_id)
         assert state.attributes["min"] == 16
@@ -55,8 +64,19 @@ async def test_pump_numbers_editable_persistent_and_native_bounded(hass, install
     await hass.async_block_till_done()
     c = installation.runtime_data
     assert not c.armed
-    assert [c.settings[key] for key in ("pump_normal_target", "pump_tempo_target", "pump_solar_target")] == [21, 18, 24]
+    assert {key: c.settings[key] for key in targets} == targets
     assert c.data.pump_target == 21
+
+
+@pytest.mark.parametrize("mode,target", [("absent", 17), ("night", 18), ("holiday", 16), ("manual", 20)])
+async def test_pump_follows_global_profile_without_arming(hass, installation, mode, target):
+    c = await setup(hass, installation)
+    c.transport.send = AsyncMock()
+    await c.set_mode(mode)
+    assert c.data.mode == mode
+    assert c.data.pump_target == target
+    assert not c.armed
+    c.transport.send.assert_not_awaited()
 
 
 @pytest.mark.parametrize("service", ["turn_on", "turn_off", "set_hvac_mode", "set_preset_mode"])

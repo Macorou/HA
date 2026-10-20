@@ -13,7 +13,11 @@
         "data": {
           "pump_entity": "Entité climate de la pompe à chaleur",
           "pump_mode": "Mode natif attendu (surveillé, jamais commandé)",
-          "pump_normal_target": "Consigne PAC normale",
+          "pump_normal_target": "Consigne PAC présence",
+          "pump_absent_target": "Consigne PAC absence",
+          "pump_night_target": "Consigne PAC nuit",
+          "pump_holiday_target": "Consigne PAC vacances",
+          "pump_manual_target": "Consigne PAC manuel",
           "pump_tempo_target": "Consigne PAC Tempo réduit",
           "pump_solar_target": "Consigne PAC solaire",
           "pump_power_entity": "Puissance électrique PAC (W ou kW)",
@@ -212,7 +216,11 @@
         "data": {
           "pump_entity": "Entité climate de la pompe à chaleur",
           "pump_mode": "Mode natif attendu (surveillé, jamais commandé)",
-          "pump_normal_target": "Consigne PAC normale",
+          "pump_normal_target": "Consigne PAC présence",
+          "pump_absent_target": "Consigne PAC absence",
+          "pump_night_target": "Consigne PAC nuit",
+          "pump_holiday_target": "Consigne PAC vacances",
+          "pump_manual_target": "Consigne PAC manuel",
           "pump_tempo_target": "Consigne PAC Tempo réduit",
           "pump_solar_target": "Consigne PAC solaire",
           "pump_power_entity": "Puissance électrique PAC (W ou kW)",
@@ -516,7 +524,19 @@
         "name": "Consigne maximale solaire"
       },
       "pump_normal_target": {
-        "name": "Consigne PAC normale"
+        "name": "Consigne PAC présence"
+      },
+      "pump_absent_target": {
+        "name": "Consigne PAC absence"
+      },
+      "pump_night_target": {
+        "name": "Consigne PAC nuit"
+      },
+      "pump_holiday_target": {
+        "name": "Consigne PAC vacances"
+      },
+      "pump_manual_target": {
+        "name": "Consigne PAC manuel"
       },
       "pump_tempo_target": {
         "name": "Consigne PAC Tempo réduit"

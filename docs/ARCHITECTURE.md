@@ -1,6 +1,6 @@
 # Architecture et plan de réalisation
 
-Smart Heat Manager 0.2.0 est une intégration locale d'orchestration : elle exploite
+Smart Heat Manager 0.2.1 est une intégration locale d'orchestration : elle exploite
 les états et services des intégrations déjà installées, sans identifiants LG,
 sans dépendance VTherm et sans accès direct au cloud.
 
@@ -52,9 +52,11 @@ défaut il suspend les ordres et conserve les états physiques. La régulation n
 les anti-cycles, l'ECS et la loi d'eau restent à la charge de la PAC. Les têtes
 peuvent fermer lorsque les pièces sont satisfaites : le débit indépendant est requis.
 
-La cible normale est conservée sans demande ; la cible réduite s'applique au
-blocage Tempo, la cible solaire au surplus qualifié avec une pièce éligible en
-demande. Les trois cibles sont des préférences persistantes modifiables en `number`.
+La cible du profil effectif (présence, absence, nuit, vacances, manuel) est conservée
+sans demande ; Tempo plafonne cette cible à la consigne réduite, le solaire qualifié
+peut la relever avec une pièce éligible en demande. Les sept cibles sont des
+préférences persistantes modifiables en `number`. Le champ historique
+`pump_normal_target` conserve l'identité de la consigne présence et sa valeur.
 La pause et les défauts produisent une cible nulle (aucun ordre, pas une consigne zéro).
 
 ## Électricité solaire

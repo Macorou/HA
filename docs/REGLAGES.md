@@ -107,13 +107,21 @@ La PAC reçoit seulement `set_temperature`. Aucun ordre marche/arrêt ou changem
 de mode n'est construit, et le transport les interdit explicitement sur la PAC.
 Une PAC en `off` ne reçoit aucun ordre, même pour le hors-gel ou le solaire.
 
-Les nombres **Consigne PAC normale**, **Consigne PAC Tempo réduit** et **Consigne PAC
-solaire** sont modifiables quotidiennement et persistés. Leurs valeurs initiales
-sont 20 / 17 / 22 °C : les vérifier avant l'armement. Les limites et le pas suivent
+Les nombres **Consigne PAC présence**, **absence**, **nuit**, **vacances**, **manuel**,
+**Tempo réduit** et **solaire** sont modifiables quotidiennement et persistés.
+Leurs valeurs initiales sont 20 / 17 / 18 / 16 / 20 / 17 / 22 °C : les vérifier
+avant l'armement. La consigne présence conserve la valeur et l'identifiant de
+l'ancienne consigne normale. Les limites et le pas suivent
 les capacités natives ; les valeurs incompatibles sont refusées, pas corrigées en
-silence. Sans demande des pièces la cible normale est conservée. Tempo réduit
-abaisse la cible, mais n'interdit pas au compresseur de chauffer nativement.
-Le préchauffage avant un jour rouge peut relever la cible normale de l'écart
+silence. La PAC suit le même mode effectif que les pièces : en automatique,
+présence/absence après temporisation (si activée), sinon présence. Le mode général
+temporaire permet aussi absence/nuit/vacances/manuel ; sa durée et son retour à
+l'automatique restent inchangés. Sans demande des pièces la cible du profil actif
+est conservée. Tempo réduit plafonne la cible sans remonter une absence/vacances
+plus basse ; il n'interdit pas au compresseur de chauffer nativement.
+Les corrections blanc/rouge s'appliquent au profil PAC et doivent respecter le
+pas/plage natifs. Le forçage général relève au moins au niveau présence.
+Le préchauffage avant un jour rouge peut relever la cible du profil de l'écart
 configuré, sans dépasser la cible solaire ni abaisser une consigne plus haute.
 
 Les têtes sont confirmées avant l'ajustement PAC. Elles peuvent fermer dès que

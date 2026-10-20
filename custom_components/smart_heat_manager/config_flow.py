@@ -11,7 +11,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import selector
 
-from .const import DEFAULTS, DOMAIN, ROOM_DEFAULTS
+from .const import DEFAULTS, DOMAIN, PUMP_TARGET_KEYS, ROOM_DEFAULTS
 from .emitters import room_actuator_entities
 from .models import effective_config
 from .validation import validate_config
@@ -38,9 +38,7 @@ SECTIONS = {
         "pump_mode": selector.SelectSelector(
             selector.SelectSelectorConfig(options=["heat", "auto"], translation_key="pump_mode")
         ),
-        "pump_normal_target": number(5, 35, 0.1, "°C"),
-        "pump_tempo_target": number(5, 35, 0.1, "°C"),
-        "pump_solar_target": number(5, 35, 0.1, "°C"),
+        **{key: number(5, 35, 0.1, "°C") for key in PUMP_TARGET_KEYS},
         "pump_power_entity": POWER,
         "water_in_entity": TEMP,
         "water_out_entity": TEMP,
