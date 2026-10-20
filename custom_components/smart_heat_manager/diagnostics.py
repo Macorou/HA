@@ -2,6 +2,8 @@
 
 import hashlib
 
+from .emitters import room_actuator_entities
+
 
 async def async_get_config_entry_diagnostics(hass, entry):
     data = entry.runtime_data.diagnostic_data()
@@ -25,7 +27,7 @@ async def async_get_config_entry_diagnostics(hass, entry):
     cfg = entry.runtime_data.config
     entities = [v for k, v in cfg["settings"].items() if k.endswith("_entity") and v]
     for room in cfg["rooms"]:
-        entities.extend([room["sensor"], *room["actuators"]])
+        entities.extend([room["sensor"], *room_actuator_entities(room)])
     for entity in sorted(set(entities), key=len, reverse=True):
         mapping[entity] = "entity_" + hashlib.sha256(entity.encode()).hexdigest()[:10]
     return anonymize(data)

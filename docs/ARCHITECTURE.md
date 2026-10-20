@@ -1,6 +1,6 @@
 # Architecture et plan de réalisation
 
-Smart Heat Manager 0.1.0 est une intégration locale d'orchestration : elle exploite
+Smart Heat Manager 0.1.1 est une intégration locale d'orchestration : elle exploite
 les états et services des intégrations déjà installées, sans identifiants LG,
 sans dépendance VTherm et sans accès direct au cloud.
 
@@ -15,6 +15,7 @@ sans dépendance VTherm et sans accès direct au cloud.
 | `regulation.py` | Sonde externe, consignes, hystérésis par pièce |
 | `engine.py` | Arbitrage explicite et décisions explicables sans effets de bord |
 | `adapters.py` | Commandes climate/number/valve, capacités vérifiées |
+| `emitters.py` | Groupes physiques : vanne simple ou SONOFF TRVZB avec ouverture, fermeture et climate |
 | `controller.py` | Sérialisation, anti-cycles, accusés d'état, purge hydraulique |
 | `coordinator.py` | Événements HA, échéances, persistance, mode observation |
 | `config_flow.py` | Installation et options : pièces ajoutables/modifiables/supprimables |

@@ -84,7 +84,7 @@
         "data": {
           "name": "Nom de la pièce",
           "sensor": "Sonde externe de référence",
-          "actuators": "Têtes climate / ouvertures number 0–100 % / valves positionnables",
+          "actuators": "Autres têtes / vannes directes (hors SONOFF TRVZB, facultatif)",
           "actuator_notes": "Marques, modèles et remarques de calibration (facultatif)",
           "present": "Consigne présence",
           "absent": "Consigne absence",
@@ -98,9 +98,10 @@
           "hysteresis": "Hystérésis de température",
           "gain": "Ouverture par degré d’écart (number/valve)",
           "enabled": "Chauffage de la pièce activé",
-          "solar_enabled": "Activer le préchauffage solaire"
+          "solar_enabled": "Activer le préchauffage solaire",
+          "configure_trvzb": "Configurer des SONOFF TRVZB (ouverture + fermeture)"
         },
-        "description": "La régulation utilise la sonde externe. Les têtes climate reçoivent une consigne haute/basse, à calibrer ; cette consigne ne confirme pas une ouverture physique. Les number doivent représenter une ouverture 0–100 %."
+        "description": "Pour une SONOFF TRVZB, activez l’option dédiée ci-dessous et laissez les trois entités de cette tête hors de la liste « Autres têtes ». L’écran suivant associe le climate, l’ouverture et la fermeture de chaque tête. La sonde externe reste la référence de la pièce."
       },
       "edit_room": {
         "title": "Modifier une pièce",
@@ -144,6 +145,38 @@
           "delete_room": "Supprimer une pièce",
           "menu": "Configuration"
         }
+      },
+      "trvzb_heads": {
+        "title": "Têtes SONOFF TRVZB de cette pièce",
+        "menu_options": {
+          "add_trvzb": "Ajouter une tête SONOFF",
+          "edit_trvzb": "Modifier une tête SONOFF",
+          "delete_trvzb": "Supprimer une tête SONOFF",
+          "room_done": "Valider la pièce",
+          "room_settings": "Revenir aux paramètres de la pièce"
+        }
+      },
+      "trvzb": {
+        "title": "Associer une SONOFF TRVZB",
+        "description": "Choisissez les trois entités d’une seule tête. Le pilotage règle ouverture=P et fermeture=100−P, puis utilise le mode Chauffage. Les retours confirment des réglages, pas une position mécanique. Vérifiez le micrologiciel et désactivez le contrôle intelligent natif s’il existe avant le pilotage réel.",
+        "data": {
+          "climate_entity": "Entité climate de cette tête SONOFF",
+          "opening_entity": "Nombre « Valve opening degree » (ouverture)",
+          "closing_entity": "Nombre « Valve closing degree » (fermeture)",
+          "firmware_confirmed": "Micrologiciel ≥ 1.1.4 vérifié et contrôle intelligent natif désactivé s’il existe"
+        }
+      },
+      "edit_trvzb": {
+        "title": "Modifier une SONOFF TRVZB",
+        "data": {
+          "head": "Tête thermostatique"
+        }
+      },
+      "delete_trvzb": {
+        "title": "Supprimer une SONOFF TRVZB",
+        "data": {
+          "head": "Tête thermostatique"
+        }
       }
     },
     "error": {
@@ -157,7 +190,10 @@
       "temperature_invalid": "Vérifier les températures, le hors-gel, l’hystérésis et les consignes basse/haute des têtes.",
       "duplicate_actuator": "Un actionneur ne peut appartenir qu’à une pièce et ne peut être la PAC.",
       "sensor_is_actuator": "La sonde externe doit être distincte des actionneurs.",
-      "recursive_entity": "Une entité créée par Smart Heat Manager ne peut être utilisée comme entrée."
+      "recursive_entity": "Une entité créée par Smart Heat Manager ne peut être utilisée comme entrée.",
+      "trvzb_entities_required": "Associez un climate et deux entités number distinctes pour chaque SONOFF TRVZB.",
+      "trvzb_firmware_required": "Vérifiez la compatibilité du micrologiciel et le contrôle intelligent natif, puis cochez la confirmation.",
+      "trvzb_pair_required": "Configurez les degrés d’ouverture/fermeture dans le menu SONOFF TRVZB, et retirez-les des vannes directes."
     },
     "abort": {
       "single_instance_allowed": "Une seule installation est autorisée."
@@ -248,7 +284,7 @@
         "data": {
           "name": "Nom de la pièce",
           "sensor": "Sonde externe de référence",
-          "actuators": "Têtes climate / ouvertures number 0–100 % / valves positionnables",
+          "actuators": "Autres têtes / vannes directes (hors SONOFF TRVZB, facultatif)",
           "actuator_notes": "Marques, modèles et remarques de calibration (facultatif)",
           "present": "Consigne présence",
           "absent": "Consigne absence",
@@ -262,9 +298,10 @@
           "hysteresis": "Hystérésis de température",
           "gain": "Ouverture par degré d’écart (number/valve)",
           "enabled": "Chauffage de la pièce activé",
-          "solar_enabled": "Activer le préchauffage solaire"
+          "solar_enabled": "Activer le préchauffage solaire",
+          "configure_trvzb": "Configurer des SONOFF TRVZB (ouverture + fermeture)"
         },
-        "description": "La régulation utilise la sonde externe. Les têtes climate reçoivent une consigne haute/basse, à calibrer ; cette consigne ne confirme pas une ouverture physique. Les number doivent représenter une ouverture 0–100 %."
+        "description": "Pour une SONOFF TRVZB, activez l’option dédiée ci-dessous et laissez les trois entités de cette tête hors de la liste « Autres têtes ». L’écran suivant associe le climate, l’ouverture et la fermeture de chaque tête. La sonde externe reste la référence de la pièce."
       },
       "edit_room": {
         "title": "Modifier une pièce",
@@ -308,6 +345,38 @@
           "delete_room": "Supprimer une pièce",
           "menu": "Configuration"
         }
+      },
+      "trvzb_heads": {
+        "title": "Têtes SONOFF TRVZB de cette pièce",
+        "menu_options": {
+          "add_trvzb": "Ajouter une tête SONOFF",
+          "edit_trvzb": "Modifier une tête SONOFF",
+          "delete_trvzb": "Supprimer une tête SONOFF",
+          "room_done": "Valider la pièce",
+          "room_settings": "Revenir aux paramètres de la pièce"
+        }
+      },
+      "trvzb": {
+        "title": "Associer une SONOFF TRVZB",
+        "description": "Choisissez les trois entités d’une seule tête. Le pilotage règle ouverture=P et fermeture=100−P, puis utilise le mode Chauffage. Les retours confirment des réglages, pas une position mécanique. Vérifiez le micrologiciel et désactivez le contrôle intelligent natif s’il existe avant le pilotage réel.",
+        "data": {
+          "climate_entity": "Entité climate de cette tête SONOFF",
+          "opening_entity": "Nombre « Valve opening degree » (ouverture)",
+          "closing_entity": "Nombre « Valve closing degree » (fermeture)",
+          "firmware_confirmed": "Micrologiciel ≥ 1.1.4 vérifié et contrôle intelligent natif désactivé s’il existe"
+        }
+      },
+      "edit_trvzb": {
+        "title": "Modifier une SONOFF TRVZB",
+        "data": {
+          "head": "Tête thermostatique"
+        }
+      },
+      "delete_trvzb": {
+        "title": "Supprimer une SONOFF TRVZB",
+        "data": {
+          "head": "Tête thermostatique"
+        }
       }
     },
     "error": {
@@ -321,7 +390,10 @@
       "temperature_invalid": "Vérifier les températures, le hors-gel, l’hystérésis et les consignes basse/haute des têtes.",
       "duplicate_actuator": "Un actionneur ne peut appartenir qu’à une pièce et ne peut être la PAC.",
       "sensor_is_actuator": "La sonde externe doit être distincte des actionneurs.",
-      "recursive_entity": "Une entité créée par Smart Heat Manager ne peut être utilisée comme entrée."
+      "recursive_entity": "Une entité créée par Smart Heat Manager ne peut être utilisée comme entrée.",
+      "trvzb_entities_required": "Associez un climate et deux entités number distinctes pour chaque SONOFF TRVZB.",
+      "trvzb_firmware_required": "Vérifiez la compatibilité du micrologiciel et le contrôle intelligent natif, puis cochez la confirmation.",
+      "trvzb_pair_required": "Configurez les degrés d’ouverture/fermeture dans le menu SONOFF TRVZB, et retirez-les des vannes directes."
     }
   },
   "selector": {

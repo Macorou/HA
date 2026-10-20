@@ -8,6 +8,19 @@ Une même tête ne peut appartenir à deux pièces. La sonde ne peut être l'un 
 actionneurs, ni la PAC. Les entités créées par Smart Heat Manager sont interdites
 comme entrées pour éviter une boucle de régulation.
 
+Pour les SONOFF TRVZB, utiliser exclusivement le menu dédié de la pièce : associer
+le climate, l'ouverture et la fermeture de chaque tête. Une paire compte comme un
+émetteur logique. Chaque pourcentage P commande ouverture=P et fermeture=100−P ;
+la consigne de température native de la tête n'est pas modifiée par ce profil.
+Les confirmations portent sur les trois entités. Une seule indisponible suspend
+les commandes ; un réglage non appliqué empêche le démarrage PAC et verrouille un
+défaut après le délai habituel. Les deux réglages restent coordonnés pendant le
+minimum marche et la circulation résiduelle. Ils ne sont jamais assimilés à une
+preuve d'ouverture mécanique. Le constructeur ne documente ces degrés qu'à partir
+du micrologiciel 1.1.4 ; vérifier aussi que le contrôle intelligent natif n'interfère
+pas. Le profil ne déclenche ni recalibration, ni mise à jour, ni désactivation du
+hors-gel matériel. Effectuer la réception mécanique avec l'installation réelle.
+
 Une demande commence sous cible − hystérésis et se termine au-dessus de cible +
 hystérésis. Les actionneurs proportionnels reçoivent une ouverture bornée à 0–100 %,
 avec minimum de demande 10 %. Pour les têtes climate, calibrer la consigne haute

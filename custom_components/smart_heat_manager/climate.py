@@ -6,6 +6,7 @@ from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
 from homeassistant.const import UnitOfTemperature
 from homeassistant.exceptions import HomeAssistantError
 
+from .emitters import room_actuator_entities
 from .entity import HeatEntity
 
 PARALLEL_UPDATES = 0
@@ -76,7 +77,7 @@ class RoomClimate(HeatEntity, ClimateEntity):
             "override_until": item.get("until") if self.preset_mode == "manual" else None,
             "actuators": {
                 e: (s.state if (s := self.coordinator.transport.state(e)) else "unavailable")
-                for e in self.room["actuators"]
+                for e in room_actuator_entities(self.room)
             },
         }
 

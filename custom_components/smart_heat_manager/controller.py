@@ -7,7 +7,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from .adapters import Command, Transport, actuator_plan, pump_plan
+from .adapters import Command, Transport, pump_plan
+from .emitters import emitter_plan, room_emitters
 from .models import Decision
 
 
@@ -100,13 +101,12 @@ class Controller:
         try:
             # Check every capability before issuing any command.
             pump = pump_plan(cfg["pump_entity"], state, cfg["pump_mode"], decision.pump_requested)
-            plans: dict[str, list[Command]] = {}
             for room in config["rooms"]:
                 opening = decision.rooms[room["id"]].opening
-                for entity in room["actuators"]:
-                    plans[entity] = actuator_plan(
-                        entity,
-                        self.transport.state(entity),
+                for emitter in room_emitters(room):
+                    emitter_plan(
+                        emitter,
+                        self.transport,
                         room,
                         opening,
                         valve_position_feature=self.valve_position_feature,
@@ -142,18 +142,18 @@ class Controller:
             all_ready = True
             for room in config["rooms"]:
                 opening = decision.rooms[room["id"]].opening
-                for entity in room["actuators"]:
+                for emitter in room_emitters(room):
                     if holding:
-                        opening_for_entity = max(opening, self.held_open.get(entity, 0))
+                        opening_for_entity = max(opening, self.held_open.get(emitter.key, 0))
                     else:
                         opening_for_entity = opening
                     # On rearm while PAC already enabled, unknown positions stay untouched
                     # unless they need opening. Hydraulic bypass is independently required.
-                    if holding and entity not in self.held_open and opening_for_entity == 0:
+                    if holding and emitter.key not in self.held_open and opening_for_entity == 0:
                         continue
-                    commands = actuator_plan(
-                        entity,
-                        self.transport.state(entity),
+                    commands = emitter_plan(
+                        emitter,
+                        self.transport,
                         room,
                         opening_for_entity,
                         valve_position_feature=self.valve_position_feature,
@@ -164,9 +164,9 @@ class Controller:
                         if not ready:
                             break
                     if opening_for_entity > 0:
-                        self.held_open[entity] = opening_for_entity
+                        self.held_open[emitter.key] = opening_for_entity
                     elif not holding:
-                        self.held_open.pop(entity, None)
+                        self.held_open.pop(emitter.key, None)
             if requested and not on and not all_ready:
                 self.status = "opening_emitters"
                 return

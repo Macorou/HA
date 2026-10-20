@@ -1,4 +1,4 @@
-# Smart Heat Manager — 0.1.0
+# Smart Heat Manager — 0.1.1
 
 Intégration personnalisée Home Assistant pour réguler des pièces à partir de
 sondes externes, coordonner une PAC existante et arbitrer Tempo EDF et surplus
@@ -11,7 +11,7 @@ session ; aucune compatibilité matérielle LG non vérifiée n'est annoncée.
 
 ## Installation locale
 
-1. Extraire `dist/smart_heat_manager-0.1.0.zip` dans le dossier de configuration HA.
+1. Extraire `dist/smart_heat_manager-0.1.1.zip` dans le dossier de configuration HA.
    Le chemin final doit être `config/custom_components/smart_heat_manager/manifest.json`.
 2. Redémarrer Home Assistant (version minimale déclarée : 2025.12).
 3. Ouvrir **Paramètres → Appareils et services → Ajouter une intégration → Smart Heat Manager**.
@@ -24,6 +24,29 @@ Les capteurs de puissance doivent publier des **W ou kW** instantanés, pas des 
 Les températures peuvent être en °C ou °F ; le moteur travaille en °C. Les actionneurs
 doivent être des `climate`, des `number` en pourcentage 0–100 ou des `valve` acceptant
 une position. Les sources LG officielles et SmartThinQ peuvent être combinées.
+
+### Têtes SONOFF TRVZB : deux réglages de vanne
+
+Dans les paramètres de la pièce, activer **Configurer des SONOFF TRVZB (ouverture +
+fermeture)**. Dans l'écran suivant, ajouter une tête et sélectionner son `climate`,
+son `number` **Valve opening degree** et son `number` **Valve closing degree**.
+Répéter pour les autres radiateurs de la pièce, puis choisir **Valider la pièce**.
+Ne pas sélectionner ces mêmes entités dans « Autres têtes / vannes directes ».
+
+Les réglages sont coordonnés : ouverture `P`, fermeture `100−P` (30 % / 70 % par
+exemple). La fermeture complète demande 0 % / 100 %. Les deux réglages sont confirmés
+avant le mode Chauffage de la tête et avant un démarrage PAC. Il ne s'agit pas de
+deux radiateurs indépendants ni d'une mesure de position mécanique.
+
+Ce profil exige un [TRVZB compatible (micrologiciel 1.1.4 ou supérieur)](https://www.zigbee2mqtt.io/devices/TRVZB.html#valve-opening-degree-numeric).
+Désactiver le contrôle intelligent natif de la tête s'il est disponible ; le profil
+ne modifie pas lui-même cette option ni le micrologiciel. Valider les mouvements
+réels et la calibration de la tête avant de confirmer les capacités de pilotage.
+
+Pour mettre à jour depuis 0.1.0 : télécharger de nouveau l'intégration dans HACS,
+redémarrer HA, puis modifier les pièces depuis les options. Les pièces existantes
+sont conservées ; leurs TRVZB doivent être associées dans le nouveau menu dédié.
+Le rechargement conserve le retour en observation.
 
 ## Premier usage et migration VTherm
 
@@ -45,7 +68,7 @@ signifient **arrêt des commandes**, et non extinction du chauffage.
 
 ## Fonctions livrées
 
-- Une entité `climate` par pièce, sonde externe, plusieurs émetteurs, hystérésis,
+- Une entité `climate` par pièce, sonde externe, plusieurs émetteurs (dont les paires SONOFF TRVZB), hystérésis,
   hors-gel et six consignes (présence, absence, nuit, vacances, manuel, solaire).
 - Modes généraux temporaires et présence temporisée. Une présence indisponible
   conserve le dernier mode connu (présent au démarrage).

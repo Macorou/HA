@@ -84,7 +84,7 @@
         "data": {
           "name": "Room name",
           "sensor": "External reference sensor",
-          "actuators": "Climate heads / 0–100 % numbers / positionable valves",
+          "actuators": "Other heads / direct valves (not SONOFF TRVZB, optional)",
           "actuator_notes": "Make, model and calibration notes (optional)",
           "present": "Present temperature",
           "absent": "Away temperature",
@@ -98,9 +98,10 @@
           "hysteresis": "Temperature hysteresis",
           "gain": "Opening per degree (number/valve)",
           "enabled": "Enable room heating",
-          "solar_enabled": "Enable solar preheating"
+          "solar_enabled": "Enable solar preheating",
+          "configure_trvzb": "Configure SONOFF TRVZB (opening + closing)"
         },
-        "description": "Regulation uses the external sensor. Climate heads receive calibrated high/low setpoints, not confirmed physical openings. Numbers must represent a 0–100 % valve opening."
+        "description": "For SONOFF TRVZB, enable the dedicated option below and keep that head’s three entities out of the Other heads list. The next screen pairs each head’s climate, opening and closing entities. Regulation uses the external room sensor."
       },
       "edit_room": {
         "title": "Edit room",
@@ -144,6 +145,38 @@
           "delete_room": "Delete room",
           "menu": "Configuration"
         }
+      },
+      "trvzb_heads": {
+        "title": "This room’s SONOFF TRVZB heads",
+        "menu_options": {
+          "add_trvzb": "Add SONOFF head",
+          "edit_trvzb": "Edit SONOFF head",
+          "delete_trvzb": "Delete SONOFF head",
+          "room_done": "Save room",
+          "room_settings": "Back to room settings"
+        }
+      },
+      "trvzb": {
+        "title": "Pair a SONOFF TRVZB",
+        "description": "Select all three entities of one head. Control sets opening=P and closing=100−P, then selects Heat. Readbacks confirm settings, not mechanical position. Check firmware and disable native smart temperature control, if available, before live control.",
+        "data": {
+          "climate_entity": "This SONOFF head’s climate entity",
+          "opening_entity": "Valve opening degree number",
+          "closing_entity": "Valve closing degree number",
+          "firmware_confirmed": "Firmware ≥ 1.1.4 verified and native smart control disabled if available"
+        }
+      },
+      "edit_trvzb": {
+        "title": "Edit a SONOFF TRVZB",
+        "data": {
+          "head": "Thermostatic head"
+        }
+      },
+      "delete_trvzb": {
+        "title": "Delete a SONOFF TRVZB",
+        "data": {
+          "head": "Thermostatic head"
+        }
       }
     },
     "error": {
@@ -157,7 +190,10 @@
       "temperature_invalid": "Check temperature bounds, frost minimum, hysteresis and head setpoints.",
       "duplicate_actuator": "Each actuator must be unique and different from the heat pump.",
       "sensor_is_actuator": "External sensor must be different from actuators.",
-      "recursive_entity": "Do not use Smart Heat Manager entities as inputs."
+      "recursive_entity": "Do not use Smart Heat Manager entities as inputs.",
+      "trvzb_entities_required": "Pair one climate and two distinct number entities per SONOFF TRVZB.",
+      "trvzb_firmware_required": "Verify firmware compatibility and native smart control, then check the confirmation.",
+      "trvzb_pair_required": "Configure opening/closing degrees in the SONOFF TRVZB menu and remove them from direct valves."
     },
     "abort": {
       "single_instance_allowed": "Only one installation is supported."
@@ -248,7 +284,7 @@
         "data": {
           "name": "Room name",
           "sensor": "External reference sensor",
-          "actuators": "Climate heads / 0–100 % numbers / positionable valves",
+          "actuators": "Other heads / direct valves (not SONOFF TRVZB, optional)",
           "actuator_notes": "Make, model and calibration notes (optional)",
           "present": "Present temperature",
           "absent": "Away temperature",
@@ -262,9 +298,10 @@
           "hysteresis": "Temperature hysteresis",
           "gain": "Opening per degree (number/valve)",
           "enabled": "Enable room heating",
-          "solar_enabled": "Enable solar preheating"
+          "solar_enabled": "Enable solar preheating",
+          "configure_trvzb": "Configure SONOFF TRVZB (opening + closing)"
         },
-        "description": "Regulation uses the external sensor. Climate heads receive calibrated high/low setpoints, not confirmed physical openings. Numbers must represent a 0–100 % valve opening."
+        "description": "For SONOFF TRVZB, enable the dedicated option below and keep that head’s three entities out of the Other heads list. The next screen pairs each head’s climate, opening and closing entities. Regulation uses the external room sensor."
       },
       "edit_room": {
         "title": "Edit room",
@@ -308,6 +345,38 @@
           "delete_room": "Delete room",
           "menu": "Configuration"
         }
+      },
+      "trvzb_heads": {
+        "title": "This room’s SONOFF TRVZB heads",
+        "menu_options": {
+          "add_trvzb": "Add SONOFF head",
+          "edit_trvzb": "Edit SONOFF head",
+          "delete_trvzb": "Delete SONOFF head",
+          "room_done": "Save room",
+          "room_settings": "Back to room settings"
+        }
+      },
+      "trvzb": {
+        "title": "Pair a SONOFF TRVZB",
+        "description": "Select all three entities of one head. Control sets opening=P and closing=100−P, then selects Heat. Readbacks confirm settings, not mechanical position. Check firmware and disable native smart temperature control, if available, before live control.",
+        "data": {
+          "climate_entity": "This SONOFF head’s climate entity",
+          "opening_entity": "Valve opening degree number",
+          "closing_entity": "Valve closing degree number",
+          "firmware_confirmed": "Firmware ≥ 1.1.4 verified and native smart control disabled if available"
+        }
+      },
+      "edit_trvzb": {
+        "title": "Edit a SONOFF TRVZB",
+        "data": {
+          "head": "Thermostatic head"
+        }
+      },
+      "delete_trvzb": {
+        "title": "Delete a SONOFF TRVZB",
+        "data": {
+          "head": "Thermostatic head"
+        }
       }
     },
     "error": {
@@ -321,7 +390,10 @@
       "temperature_invalid": "Check temperature bounds, frost minimum, hysteresis and head setpoints.",
       "duplicate_actuator": "Each actuator must be unique and different from the heat pump.",
       "sensor_is_actuator": "External sensor must be different from actuators.",
-      "recursive_entity": "Do not use Smart Heat Manager entities as inputs."
+      "recursive_entity": "Do not use Smart Heat Manager entities as inputs.",
+      "trvzb_entities_required": "Pair one climate and two distinct number entities per SONOFF TRVZB.",
+      "trvzb_firmware_required": "Verify firmware compatibility and native smart control, then check the confirmation.",
+      "trvzb_pair_required": "Configure opening/closing degrees in the SONOFF TRVZB menu and remove them from direct valves."
     }
   },
   "selector": {

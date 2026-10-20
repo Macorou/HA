@@ -17,9 +17,10 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from .adapters import EntityState, actuator_plan, pump_plan
+from .adapters import EntityState, pump_plan
 from .const import DOMAIN, MODES
 from .controller import Controller
+from .emitters import emitter_plan, room_actuator_entities, room_emitters
 from .engine import Engine
 from .models import Snapshot, active_override, effective_config
 from .validation import validate_config
@@ -89,7 +90,7 @@ class HeatCoordinator(DataUpdateCoordinator):
     def controlled_entities(self):
         return [
             self.settings["pump_entity"],
-            *(entity for room in self.config["rooms"] for entity in room["actuators"]),
+            *(entity for room in self.config["rooms"] for entity in room_actuator_entities(room)),
         ]
 
     async def async_start(self):
@@ -104,7 +105,7 @@ class HeatCoordinator(DataUpdateCoordinator):
             _LOGGER.warning("Discarding daily numeric preferences incompatible with the updated options")
         tracked = {v for k, v in self.settings.items() if k.endswith("_entity") and v}
         for room in self.config["rooms"]:
-            tracked.update([room["sensor"], *room["actuators"]])
+            tracked.update([room["sensor"], *room_actuator_entities(room)])
         self.entry.async_on_unload(async_track_state_change_event(self.hass, list(tracked), self.schedule))
         self.entry.async_on_unload(async_track_time_interval(self.hass, self.schedule, timedelta(seconds=15)))
         self.entry.async_on_unload(self.shutdown)
@@ -192,7 +193,9 @@ class HeatCoordinator(DataUpdateCoordinator):
             pump_available=pump is not None,
             pump_on=pump is not None and pump.state != "off",
             actuators_available=all(
-                self.fresh_state(e, max_age=0) is not None for r in self.config["rooms"] for e in r["actuators"]
+                self.fresh_state(e, max_age=0) is not None
+                for r in self.config["rooms"]
+                for e in room_actuator_entities(r)
             ),
             presence=self.text("presence_entity"),
             today=self.text("tempo_today_entity"),
@@ -345,11 +348,11 @@ class HeatCoordinator(DataUpdateCoordinator):
                 )
             ]
             for room in self.config["rooms"]:
-                for entity in room["actuators"]:
+                for emitter in room_emitters(room):
                     commands.extend(
-                        actuator_plan(
-                            entity,
-                            self.transport.state(entity),
+                        emitter_plan(
+                            emitter,
+                            self.transport,
                             room,
                             0,
                             valve_position_feature=int(ValveEntityFeature.SET_POSITION),

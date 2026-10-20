@@ -1,7 +1,7 @@
 """Configuration keys and conservative defaults (seconds, watts, Celsius)."""
 
 DOMAIN = "smart_heat_manager"
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 PLATFORMS = ["climate", "sensor", "binary_sensor", "switch", "number", "select", "button"]
 MODES = ["auto", "present", "absent", "night", "holiday", "manual"]
 DEFAULTS = {
@@ -41,6 +41,8 @@ DEFAULTS = {
     "water_max": 60.0,
 }
 ROOM_DEFAULTS = {
+    "actuators": [],
+    "trvzb_heads": [],
     "present": 20.0,
     "absent": 17.0,
     "night": 18.0,
