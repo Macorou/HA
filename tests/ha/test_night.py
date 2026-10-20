@@ -11,7 +11,7 @@ from custom_components.smart_heat_manager.const import DOMAIN
 
 
 async def test_night_time_services_toggle_reload_and_observation(hass, installation, freezer):
-    hass.config.set_time_zone("Europe/Paris")
+    await hass.config.async_set_time_zone("Europe/Paris")
     freezer.move_to("2026-10-21T23:00:00+00:00")
     hass.states.async_set(
         "climate.pump",
