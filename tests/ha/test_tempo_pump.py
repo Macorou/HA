@@ -159,3 +159,30 @@ async def test_forged_mode_command_has_no_transport_authorization(hass, tempo_in
     with pytest.raises(HomeAssistantError, match="setpoint-only"):
         await c.transport.send(Command("climate.pump", "set_hvac_mode", "hvac_mode", "off", None))
     assert calls == []
+
+
+async def test_native_relaunch_while_observing_does_not_pre_authorize_later_heat(hass, tempo_installation):
+    c, calls = tempo_installation
+    set_pump(hass, "off")
+    await hass.async_block_till_done()
+    set_pump(hass, "heat", context=Context(user_id="manual-user"))
+    await hass.async_block_till_done()
+    await c.async_evaluate()
+    assert not c.override("tempo_bypass")
+    assert not c.armed
+    assert calls == []
+
+
+async def test_revoked_control_blocks_even_an_in_progress_tempo_transition(hass, tempo_installation):
+    from custom_components.smart_heat_manager.controller import ControlSuspended
+
+    c, calls = tempo_installation
+    c.armed = True
+    c.config["settings"]["control_enabled"] = False
+    command = Command("climate.pump", "set_hvac_mode", "hvac_mode", "off", None)
+    c.controller.mode_authorization = command
+    with pytest.raises(ControlSuspended):
+        await c.transport.send(command)
+    c.controller.mode_authorization = None
+    c.armed = False
+    assert calls == []

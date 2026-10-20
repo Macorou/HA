@@ -10,7 +10,7 @@ from math import isfinite
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.valve import ValveEntityFeature
-from homeassistant.core import callback
+from homeassistant.core import Context, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.event import async_call_later, async_track_state_change_event, async_track_time_interval
 from homeassistant.helpers.storage import Store
@@ -80,7 +80,11 @@ class HATransport:
         if domain == "climate" and command.field == "temperature" and self.hass.config.units.temperature_unit == "°F":
             value = float(value) * 9 / 5 + 32
         await self.hass.services.async_call(
-            domain, command.service, {"entity_id": command.entity_id, command.field: value}, blocking=True
+            domain,
+            command.service,
+            {"entity_id": command.entity_id, command.field: value},
+            blocking=True,
+            context=Context(),
         )
 
 
@@ -259,7 +263,15 @@ class HeatCoordinator(DataUpdateCoordinator):
         )
 
     def permit_commands(self):
-        if not self.armed or self.closed or not self.runtime.get("automation_enabled", True):
+        if (
+            not self.armed
+            or self.closed
+            or not self.runtime.get("automation_enabled", True)
+            or not all(
+                self.settings[key]
+                for key in ("control_enabled", "hydraulic_confirmed", "exclusive_confirmed", "capabilities_confirmed")
+            )
+        ):
             return False
         snapshot = self.build_snapshot()
         return (
