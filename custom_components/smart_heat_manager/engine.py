@@ -5,7 +5,7 @@ from .models import Decision, Snapshot, active_override
 from .presence import Presence
 from .regulation import regulate
 from .solar import Solar, surplus
-from .tempo import color, preheat, restricted
+from .tempo import color, preheat, pump_stop_required, red_window_end, restricted
 
 
 class Engine:
@@ -94,8 +94,15 @@ class Engine:
             state, reason = ("solar_heating", "solar_surplus") if solar_demand else ("heating", "room_demand")
         else:
             state, reason = "idle", "no_demand"
+        tempo_stop = pump_stop_required(cfg, now, today, runtime)
+        if tempo_stop:
+            for room in rooms.values():
+                room.demand, room.opening, room.reason = False, 0, "tempo_blocked"
+            demand = False
+            if not faults and not paused:
+                state, reason = "tempo_blocked", "red_peak_hours"
         pump_target = None
-        if not faults and not paused:
+        if not faults and not paused and not tempo_stop:
             # Follow the same effective profile as the rooms, not their demand.
             # No room demand never implies turning off the autonomous heat pump.
             pump_target = cfg[PUMP_MODE_TARGETS[mode]]
@@ -117,10 +124,12 @@ class Engine:
             rooms,
             net,
             budget,
-            solar,
+            solar and not tempo_stop,
             today,
             bool(tempo),
             bypass or force,
             faults,
             pump_target,
+            tempo_stop,
+            red_window_end(today, now, cfg["tempo_enabled"]),
         )

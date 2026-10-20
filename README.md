@@ -1,4 +1,4 @@
-# Smart Heat Manager — 0.2.1
+# Smart Heat Manager — 0.3.0
 
 Intégration personnalisée Home Assistant pour réguler des pièces à partir de
 sondes externes, coordonner une PAC existante et arbitrer Tempo EDF et surplus
@@ -11,7 +11,7 @@ session ; aucune compatibilité matérielle LG non vérifiée n'est annoncée.
 
 ## Installation locale
 
-1. Extraire `dist/smart_heat_manager-0.2.1.zip` dans le dossier de configuration HA.
+1. Extraire `dist/smart_heat_manager-0.3.0.zip` dans le dossier de configuration HA.
    Le chemin final doit être `config/custom_components/smart_heat_manager/manifest.json`.
 2. Redémarrer Home Assistant (version minimale déclarée : 2025.12).
 3. Ouvrir **Paramètres → Appareils et services → Ajouter une intégration → Smart Heat Manager**.
@@ -25,15 +25,31 @@ Les températures peuvent être en °C ou °F ; le moteur travaille en °C. Les 
 doivent être des `climate`, des `number` en pourcentage 0–100 ou des `valve` acceptant
 une position. Les sources LG officielles et SmartThinQ peuvent être combinées.
 
-### PAC autonome : consignes uniquement (0.2.0)
+### PAC autonome avec exception Tempo (0.3.0)
 
-La PAC conserve sa régulation native par la sonde du salon. SHM ne lui envoie
-**jamais** `turn_on`, `turn_off` ni `set_hvac_mode` : seul `set_temperature` est
-autorisé, même en Tempo, solaire ou hors-gel. Une PAC arrêtée manuellement ne
-reçoit aucune commande. Le mode natif attendu est surveillé, jamais sélectionné.
+Hors exception Tempo, la PAC conserve sa régulation native par la sonde du salon :
+SHM ne règle que la température, sans ordres marche/arrêt liés aux demandes des
+pièces. **En jour rouge confirmé de 6 h à 22 h**, SHM demande le mode `off` puis,
+à partir de 22 h, restaure le mode natif attendu uniquement s'il a lui-même arrêté
+la PAC et reçu la confirmation. Une PAC déjà arrêtée manuellement n'est pas rallumée.
+
+Deux relances manuelles sont possibles pendant la période rouge :
+
+- **Dérogation Tempo temporaire** : autorise la reprise d'une PAC arrêtée par SHM
+  pendant la durée choisie. À expiration avant 22 h, nouvel arrêt Tempo.
+- **Bouton Marche habituel de la PAC** : si HA remonte le passage de `off` au mode
+  attendu, SHM respecte cette relance jusqu'à 22 h. L'interrupteur de dérogation
+  reflète cette autorisation et son échéance. Une relance externe/automatisée qui
+  apparaît comme ce même passage est également respectée : désactiver les anciens
+  pilotes avant l'armement, pour éviter qu'ils ne contournent involontairement Tempo.
+
+Un arrêt manuel après une relance annule la reprise automatique connue de SHM.
+Le logiciel doit être armé, actif, sans défaut et HA doit fonctionner pour envoyer
+ces ordres. Un redémarrage désarme toujours : réarmer pour permettre la reprise.
+Il ne s'agit pas d'une coupure électrique ; les protections natives restent actives.
 
 Les consignes PAC sont des entités `number` persistantes, modifiables sans code :
-**présence**, **absence**, **nuit**, **vacances**, **manuel**, **Tempo réduit** et
+**présence**, **absence**, **nuit**, **vacances**, **manuel**, **repli Tempo inconnu** et
 **solaire**. Valeurs initiales : 20 / 17 / 18 / 16 / 20 / 17 / 22 °C, à adapter
 avant l'armement dans les limites et le pas exposés par la PAC.
 La PAC suit le même mode effectif que les pièces. En automatique, la présence
@@ -43,13 +59,17 @@ est réglable. À l'échéance, retour automatique, comme pour les pièces.
 L'ancien réglage « normale » devient « présence » : identifiant et valeur conservés.
 Le capteur **Consigne PAC calculée** expose la cible, même en observation.
 Sans demande des pièces, la consigne du profil actif est conservée : aucun arrêt ni
-abaissement automatique. Tempo rouge HP plafonne cette consigne à la cible réduite, sans garantir
-une consommation nulle ; solaire qualifié utilise la cible solaire si une pièce
+abaissement automatique. La consigne de repli ne s'applique qu'au blocage sur une
+couleur inconnue : ce n'est plus la stratégie des jours rouges confirmés.
+Le solaire qualifié utilise la cible solaire si une pièce
 autorisée est en demande, sans abaisser une cible de profil plus élevée.
 Les corrections blanc/rouge et le forçage général s'appliquent aussi à la PAC.
 Ils doivent rester compatibles avec la plage et le pas natifs (sinon commandes
 suspendues, pas de consigne arrondie en silence).
 Pause ou défaut : aucun ordre, dernière consigne conservée.
+Le solaire et le hors-gel logiciel ne relancent pas automatiquement la PAC pendant
+les heures rouges confirmées ; une dérogation manuelle est nécessaire. Vérifier
+le risque de gel avec l'installateur et conserver les protections natives.
 
 Les anciens minima marche/arrêt et délais de circulation de SHM ne sont plus
 appliqués : ces fonctions restent natives à la PAC. Le débit minimal indépendant
@@ -125,14 +145,15 @@ signifient **arrêt des commandes**, et non extinction du chauffage.
 - Opt-in solaire par pièce, consigne solaire exposée en `number`, autorisation
   solaire rouge configurable. Une pièce exclue du solaire reste bloquée en rouge.
 - Vérification des capacités, commandes sérialisées, limitation de fréquence,
-  accusés par retour d'état et consignes PAC sans aucun ordre marche/arrêt.
+  accusés par retour d'état et consignes PAC avec une seule exception marche/arrêt : Tempo.
 - Capteurs explicatifs, notifications de défaut et diagnostics anonymisés.
 - Simulateur hors ligne, tests unitaires et tests HA prévus pour Linux.
 
 ## Contrats matériels et limites
 
-La PAC reçoit uniquement une température ambiante via `climate.set_temperature`,
-jamais une commande de mode ni d'allumage/extinction. Le réglage de puissance
+La PAC reçoit une température ambiante via `climate.set_temperature`. La seule
+exception de mode est l'arrêt Tempo et la reprise autorisée d'un arrêt SHM confirmé,
+via `climate.set_hvac_mode` ; `turn_on`/`turn_off` ne sont jamais utilisés. Le réglage de puissance
 compresseur, l'ECS, la coupure électrique et la loi d'eau ne sont pas commandés.
 La PAC conserve la modulation, les anti-cycles et la circulation native.
 

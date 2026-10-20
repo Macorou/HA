@@ -1,6 +1,6 @@
 # Architecture et plan de réalisation
 
-Smart Heat Manager 0.2.1 est une intégration locale d'orchestration : elle exploite
+Smart Heat Manager 0.3.0 est une intégration locale d'orchestration : elle exploite
 les états et services des intégrations déjà installées, sans identifiants LG,
 sans dépendance VTherm et sans accès direct au cloud.
 
@@ -45,19 +45,30 @@ Le résultat logique (`fault`, `paused`, `frost`, `tempo_blocked`, `heating`,
 Une demande logique ne prouve jamais que le compresseur tourne.
 
 Le contrôleur confirme les émetteurs avant de modifier la température ambiante
-demandée à la PAC. La PAC n'est jamais allumée, éteinte ou changée de mode par SHM.
-Une barrière supplémentaire dans le transport interdit tout service autre que
-`set_temperature` sur son entité et revalide son mode juste avant l'envoi. En
+demandée à la PAC. La seule exception marche/arrêt est la fenêtre rouge Tempo :
+arrêt, puis reprise d'un arrêt attribué à SHM et confirmé par retour d'état.
+Une barrière dans le transport exige une autorisation éphémère de ce contrôleur,
+revérifie la fenêtre/dérogation, l'armement, les protections et la propriété de
+l'arrêt avant tout changement de mode. Les consignes sont aussi bloquées pendant
+l'arrêt Tempo pour éviter qu'un appareil ne se réveille par une écriture de cible. En
 défaut il suspend les ordres et conserve les états physiques. La régulation native,
 les anti-cycles, l'ECS et la loi d'eau restent à la charge de la PAC. Les têtes
 peuvent fermer lorsque les pièces sont satisfaites : le débit indépendant est requis.
 
 La cible du profil effectif (présence, absence, nuit, vacances, manuel) est conservée
-sans demande ; Tempo plafonne cette cible à la consigne réduite, le solaire qualifié
+sans demande ; les jours rouges confirmés demandent un arrêt. La couleur inconnue
+peut plafonner cette cible à la consigne de repli ; le solaire qualifié
 peut la relever avec une pièce éligible en demande. Les sept cibles sont des
 préférences persistantes modifiables en `number`. Le champ historique
 `pump_normal_target` conserve l'identité de la consigne présence et sa valeur.
 La pause et les défauts produisent une cible nulle (aucun ordre, pas une consigne zéro).
+
+Le journal persistant `runtime.tempo_control` enregistre l'entité, le mode, la fin
+de fenêtre et la confirmation de l'arrêt. Une intention seule ne permet jamais de
+rallumer après un redémarrage. Les transitions externes `off → mode attendu`
+pendant les heures rouges créent une dérogation jusqu'à 22 h ; les acquittements
+des propres reprises du contrôleur ne prolongent pas une dérogation temporaire.
+Le redémarrage conserve les préférences mais désarme, donc ne commande aucune reprise.
 
 ## Électricité solaire
 

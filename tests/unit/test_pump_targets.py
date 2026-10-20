@@ -26,13 +26,13 @@ class PumpTargetTests(unittest.TestCase):
 
     def test_reduced_tempo_and_override_return_to_configured_normal(self):
         self.cfg["settings"].update(tempo_enabled=True, tempo_today_entity="sensor.tempo")
-        self.assertEqual(self.evaluate(today="red").pump_target, 18)
+        self.assertIsNone(self.evaluate(today="red").pump_target)
         self.assertEqual(self.evaluate(today="unknown").pump_target, 18)
         runtime = {"overrides": {"tempo_bypass": {"value": True, "until": (self.now + timedelta(hours=1)).isoformat()}}}
         snap = Snapshot(self.now, {"living": 18}, today="red")
         self.assertEqual(Engine().evaluate(self.cfg, snap, runtime).pump_target, 21)
         snap.temperatures["living"] = 3
-        self.assertEqual(Engine().evaluate(self.cfg, snap, {}).pump_target, 21)
+        self.assertIsNone(Engine().evaluate(self.cfg, snap, {}).pump_target)
 
     def test_solar_setpoint_requires_qualified_surplus_and_eligible_room(self):
         self.cfg["settings"].update(solar_enabled=True, grid_entity="sensor.grid", solar_delay=0)
@@ -96,11 +96,12 @@ class PumpTargetTests(unittest.TestCase):
         runtime = self.profile_runtime("absent", self.now)
         self.assertEqual(Engine().evaluate(self.cfg, snap, runtime).pump_target, 21)
 
-    def test_tempo_does_not_raise_an_already_lower_away_target(self):
+    def test_confirmed_red_stops_even_with_a_low_away_target(self):
         self.cfg["settings"].update(tempo_enabled=True, tempo_today_entity="sensor.tempo", pump_absent_target=16)
         snap = Snapshot(self.now, {"living": 25}, today="red")
         result = Engine().evaluate(self.cfg, snap, self.profile_runtime("absent"))
-        self.assertEqual(result.pump_target, 16)
+        self.assertIsNone(result.pump_target)
+        self.assertTrue(result.pump_tempo_stop)
 
     def test_profile_color_offset_and_force_follow_room_rules(self):
         self.cfg["settings"].update(tempo_enabled=True, tempo_today_entity="sensor.tempo", white_delta=-1)

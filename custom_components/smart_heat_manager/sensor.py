@@ -33,6 +33,9 @@ ENUMS = {
         "draining",
         "pump_off",
         "adjusting_setpoint",
+        "tempo_stopping",
+        "tempo_stopped",
+        "tempo_resuming",
     ],
     "tempo": ["red", "white", "blue", "unknown"],
 }
@@ -77,7 +80,9 @@ class HeatSensor(HeatEntity, SensorEntity):
         if self.key == "pump_target":
             return {
                 "effective_profile": self.coordinator.data.mode,
-                "pump_control_policy": "setpoint_only",
+                "pump_control_policy": "setpoints_with_tempo_stop",
+                "tempo_shutdown_requested": self.coordinator.data.pump_tempo_stop,
+                "tempo_shutdown_until": self.coordinator.data.pump_tempo_until,
                 "observation": not self.coordinator.armed,
             }
         if self.key == "decision":
@@ -86,7 +91,8 @@ class HeatSensor(HeatEntity, SensorEntity):
                 "armed": self.coordinator.armed,
                 "faults": self.coordinator.data.faults,
                 "pump_observed_on": self.coordinator.snapshot.pump_on,
-                "pump_control_policy": "setpoint_only",
+                "pump_control_policy": "setpoints_with_tempo_stop",
+                "tempo_shutdown_requested": self.coordinator.data.pump_tempo_stop,
                 "pump_requested_temperature": self.coordinator.data.pump_target,
             }
         return None

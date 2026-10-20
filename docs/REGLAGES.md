@@ -37,9 +37,9 @@ y compris ce hors-gel logiciel.
 | --- | --- |
 | Protection, donnée essentielle absente, température d'eau haute | Suspension des commandes et alerte |
 | Automatismes désactivés | Suspension des commandes, sans extinction native |
-| Sous la température hors-gel | Demande prioritaire sur Tempo, sous réserve des minima PAC |
+| Sous la température hors-gel | Demande hors-gel, sans relance automatique de la PAC en rouge confirmé |
 | Forçage général / dérogation Tempo | Suspension des règles économiques jusqu'à échéance |
-| Rouge HP, sans dérogation | Aucune demande normale ; solaire uniquement si explicitement permis |
+| Rouge HP confirmé, sans dérogation | Arrêt PAC confirmé, puis reprise à partir de 22 h si l'arrêt appartient à SHM |
 | Besoin normal | Consigne du mode effectif |
 | Surplus qualifié | Cible solaire pour les seules pièces autorisées |
 
@@ -62,6 +62,19 @@ Le moteur utilise le fuseau Home Assistant (`Paramètres → Système → Géné
 pas celui du navigateur. La restriction est active de 06:00 inclus à 22:00 exclu.
 Les textes bleu/blue, blanc/white et rouge/red sont reconnus. Les sources booléennes
 « rouge ou non » ne suffisent pas à distinguer blanc/bleu et sont exclues du sélecteur.
+
+En rouge confirmé, le contrôleur armé demande `off` de 6 h à 22 h. À 22 h, il ne
+restaure le mode attendu que si SHM a enregistré et confirmé son propre arrêt.
+Une PAC déjà en `off` n'acquiert pas cette autorisation de reprise.
+La dérogation Tempo temporaire permet une reprise pendant sa durée ; une relance
+par le bouton natif, observée dans HA, crée une dérogation jusqu'à 22 h. Un arrêt
+manuel après cette relance annule la reprise connue. Les acquittements des ordres
+SHM sont distingués des relances externes, pour ne pas étendre les dérogations.
+Couleur inconnue : pas d'arrêt automatique présenté comme rouge confirmé ; le
+plafond de repli peut s'appliquer si le blocage sur couleur inconnue est activé.
+Le solaire et le hors-gel logiciel ne contournent pas l'arrêt rouge confirmé.
+Les protections matérielles restent indispensables ; arrêt chauffage ne signifie
+pas coupure électrique ni garantie d'absence de consommation auxiliaire.
 
 Vérifier la sémantique de l'entité fournie : certaines intégrations changent la
 couleur à minuit, d'autres à 6 h. Pour anticiper avant 6 h, la source Aujourd'hui doit
@@ -103,12 +116,13 @@ Il ne s'agit jamais d'une consigne directe de puissance compresseur.
 
 ## PAC autonome et défauts
 
-La PAC reçoit seulement `set_temperature`. Aucun ordre marche/arrêt ou changement
-de mode n'est construit, et le transport les interdit explicitement sur la PAC.
-Une PAC en `off` ne reçoit aucun ordre, même pour le hors-gel ou le solaire.
+Hors exception Tempo documentée ci-dessus, la PAC reçoit seulement `set_temperature`.
+Le transport interdit toute commande de mode sans autorisation Tempo ponctuelle
+et propriété confirmée pour la reprise. Un arrêt manuel n'est pas repris par
+une demande ordinaire, le hors-gel logiciel ou le solaire.
 
 Les nombres **Consigne PAC présence**, **absence**, **nuit**, **vacances**, **manuel**,
-**Tempo réduit** et **solaire** sont modifiables quotidiennement et persistés.
+**repli Tempo inconnu** et **solaire** sont modifiables quotidiennement et persistés.
 Leurs valeurs initiales sont 20 / 17 / 18 / 16 / 20 / 17 / 22 °C : les vérifier
 avant l'armement. La consigne présence conserve la valeur et l'identifiant de
 l'ancienne consigne normale. Les limites et le pas suivent
@@ -117,8 +131,8 @@ silence. La PAC suit le même mode effectif que les pièces : en automatique,
 présence/absence après temporisation (si activée), sinon présence. Le mode général
 temporaire permet aussi absence/nuit/vacances/manuel ; sa durée et son retour à
 l'automatique restent inchangés. Sans demande des pièces la cible du profil actif
-est conservée. Tempo réduit plafonne la cible sans remonter une absence/vacances
-plus basse ; il n'interdit pas au compresseur de chauffer nativement.
+est conservée. Le repli sur couleur inconnue plafonne la cible sans remonter une
+absence/vacances plus basse. Les jours rouges confirmés demandent l'arrêt, pas ce plafond.
 Les corrections blanc/rouge s'appliquent au profil PAC et doivent respecter le
 pas/plage natifs. Le forçage général relève au moins au niveau présence.
 Le préchauffage avant un jour rouge peut relever la cible du profil de l'écart

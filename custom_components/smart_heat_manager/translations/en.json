@@ -18,7 +18,7 @@
           "pump_night_target": "Night heat pump setpoint",
           "pump_holiday_target": "Holiday heat pump setpoint",
           "pump_manual_target": "Manual heat pump setpoint",
-          "pump_tempo_target": "Reduced Tempo heat pump setpoint",
+          "pump_tempo_target": "Fallback heat pump setpoint (unknown Tempo)",
           "pump_solar_target": "Solar heat pump setpoint",
           "pump_power_entity": "Heat pump electrical power (W or kW)",
           "water_in_entity": "Inlet water temperature",
@@ -37,6 +37,7 @@
       },
       "tempo": {
         "title": "EDF Tempo",
+        "description": "Confirmed red 06:00–22:00: stop the heat pump. At 22:00, restore only a stop confirmed as SHM-owned. Timed bypass is available; a native manual relaunch is respected until 22:00. Requires armed control and valid safety inputs.",
         "data": {
           "tempo_enabled": "Enable Tempo",
           "tempo_today_entity": "Today's applicable color",
@@ -221,7 +222,7 @@
           "pump_night_target": "Night heat pump setpoint",
           "pump_holiday_target": "Holiday heat pump setpoint",
           "pump_manual_target": "Manual heat pump setpoint",
-          "pump_tempo_target": "Reduced Tempo heat pump setpoint",
+          "pump_tempo_target": "Fallback heat pump setpoint (unknown Tempo)",
           "pump_solar_target": "Solar heat pump setpoint",
           "pump_power_entity": "Heat pump electrical power (W or kW)",
           "water_in_entity": "Inlet water temperature",
@@ -240,6 +241,7 @@
       },
       "tempo": {
         "title": "EDF Tempo",
+        "description": "Confirmed red 06:00–22:00: stop the heat pump. At 22:00, restore only a stop confirmed as SHM-owned. Timed bypass is available; a native manual relaunch is respected until 22:00. Requires armed control and valid safety inputs.",
         "data": {
           "tempo_enabled": "Enable Tempo",
           "tempo_today_entity": "Today's applicable color",
@@ -438,6 +440,9 @@
           "running": "Setpoint regulation",
           "pump_off": "Heat pump off — no commands",
           "adjusting_setpoint": "Waiting for heat pump setpoint",
+          "tempo_stopping": "Tempo stopping",
+          "tempo_stopped": "Heat pump stopped for Tempo",
+          "tempo_resuming": "Resuming after Tempo stop",
           "starting": "Starting",
           "stopping": "Stopping",
           "idle": "Idle",
@@ -539,7 +544,7 @@
         "name": "Manual heat pump setpoint"
       },
       "pump_tempo_target": {
-        "name": "Reduced Tempo heat pump setpoint"
+        "name": "Fallback heat pump setpoint (unknown Tempo)"
       },
       "pump_solar_target": {
         "name": "Solar heat pump setpoint"

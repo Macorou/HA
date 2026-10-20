@@ -188,15 +188,15 @@ class ControllerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.controller.status, "pump_off")
         self.assertTrue(all(c.entity_id != "climate.pump" for c in self.transport.sent))
 
-    async def test_tempo_reduction_uses_temperature_never_off(self):
+    async def test_confirmed_red_hours_stop_pump_instead_of_reducing_temperature(self):
         self.cfg["settings"].update(tempo_enabled=True, tempo_today_entity="sensor.tempo")
         self.transport.entities["climate.pump"].attributes["temperature"] = 20
         decision = self.engine.evaluate(self.cfg, Snapshot(self.now.replace(hour=12), {"living": 18}, today="red"), {})
-        self.assertEqual(decision.pump_target, 17)
+        self.assertIsNone(decision.pump_target)
         await self.tick(0, decision=decision)
         pump_commands = [c for c in self.transport.sent if c.entity_id == "climate.pump"]
-        self.assertEqual([(c.service, c.value) for c in pump_commands], [("set_temperature", 17)])
-        self.assertEqual(self.transport.state("climate.pump").state, "heat")
+        self.assertEqual([(c.service, c.value) for c in pump_commands], [("set_hvac_mode", "off")])
+        self.assertEqual(self.transport.state("climate.pump").state, "off")
 
     async def test_no_mode_commands_across_requests_faults_pause_and_idle(self):
         for sec, heat in ((0, True), (30, False), (60, True), (90, False)):

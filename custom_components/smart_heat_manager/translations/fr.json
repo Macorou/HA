@@ -18,7 +18,7 @@
           "pump_night_target": "Consigne PAC nuit",
           "pump_holiday_target": "Consigne PAC vacances",
           "pump_manual_target": "Consigne PAC manuel",
-          "pump_tempo_target": "Consigne PAC Tempo réduit",
+          "pump_tempo_target": "Consigne PAC de repli (Tempo inconnu)",
           "pump_solar_target": "Consigne PAC solaire",
           "pump_power_entity": "Puissance électrique PAC (W ou kW)",
           "water_in_entity": "Température entrée d’eau",
@@ -37,6 +37,7 @@
       },
       "tempo": {
         "title": "Tempo EDF",
+        "description": "Rouge confirmé de 6 h à 22 h : arrêt de la PAC. À 22 h, reprise uniquement après un arrêt confirmé de SHM. Dérogation temporaire possible ; une relance par le bouton de la PAC est respectée jusqu’à 22 h. Commandes uniquement si le pilotage est armé et sans défaut.",
         "data": {
           "tempo_enabled": "Activer Tempo",
           "tempo_today_entity": "Couleur applicable aujourd’hui",
@@ -221,7 +222,7 @@
           "pump_night_target": "Consigne PAC nuit",
           "pump_holiday_target": "Consigne PAC vacances",
           "pump_manual_target": "Consigne PAC manuel",
-          "pump_tempo_target": "Consigne PAC Tempo réduit",
+          "pump_tempo_target": "Consigne PAC de repli (Tempo inconnu)",
           "pump_solar_target": "Consigne PAC solaire",
           "pump_power_entity": "Puissance électrique PAC (W ou kW)",
           "water_in_entity": "Température entrée d’eau",
@@ -240,6 +241,7 @@
       },
       "tempo": {
         "title": "Tempo EDF",
+        "description": "Rouge confirmé de 6 h à 22 h : arrêt de la PAC. À 22 h, reprise uniquement après un arrêt confirmé de SHM. Dérogation temporaire possible ; une relance par le bouton de la PAC est respectée jusqu’à 22 h. Commandes uniquement si le pilotage est armé et sans défaut.",
         "data": {
           "tempo_enabled": "Activer Tempo",
           "tempo_today_entity": "Couleur applicable aujourd’hui",
@@ -438,6 +440,9 @@
           "running": "Régulation par consigne",
           "pump_off": "PAC arrêtée — aucun ordre",
           "adjusting_setpoint": "Attente confirmation consigne PAC",
+          "tempo_stopping": "Arrêt Tempo en cours",
+          "tempo_stopped": "PAC arrêtée par Tempo",
+          "tempo_resuming": "Reprise après arrêt Tempo",
           "starting": "Démarrage",
           "stopping": "Arrêt en cours",
           "idle": "Repos",
@@ -539,7 +544,7 @@
         "name": "Consigne PAC manuel"
       },
       "pump_tempo_target": {
-        "name": "Consigne PAC Tempo réduit"
+        "name": "Consigne PAC de repli (Tempo inconnu)"
       },
       "pump_solar_target": {
         "name": "Consigne PAC solaire"

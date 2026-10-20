@@ -55,12 +55,13 @@ class EngineTests(unittest.TestCase):
         self.assertTrue(self.decide(today="red").pump_requested)
         self.assertFalse(self.decide(today="red", protection=True).pump_requested)
 
-    def test_frost_has_priority_over_tempo_and_disabled_room(self):
+    def test_software_frost_does_not_restart_pump_during_confirmed_red_hours(self):
         self.cfg["settings"]["tempo_enabled"] = True
         self.cfg["rooms"][0]["enabled"] = False
         decision = self.decide(today="red", temperatures={"living": 5})
-        self.assertEqual(decision.state, "frost")
-        self.assertTrue(decision.pump_requested)
+        self.assertEqual(decision.state, "tempo_blocked")
+        self.assertFalse(decision.pump_requested)
+        self.assertTrue(decision.pump_tempo_stop)
 
     def test_lost_sensor_faults_whole_installation(self):
         decision = self.decide(temperatures={"living": None})
@@ -133,6 +134,8 @@ class EngineTests(unittest.TestCase):
         self.cfg["rooms"][0]["solar_enabled"] = False
         self.assertFalse(self.decide(grid=-4000, today="red").pump_requested)
         self.cfg["rooms"][0]["solar_enabled"] = True
+        self.assertFalse(self.decide(grid=-4000, today="red").pump_requested)
+        self.override("tempo_bypass", True)
         self.assertTrue(self.decide(grid=-4000, today="red").pump_requested)
 
     def test_solar_ceiling_and_manual_override_priority(self):

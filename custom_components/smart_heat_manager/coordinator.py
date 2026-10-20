@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from datetime import timedelta
 from math import isfinite
 
@@ -17,22 +17,25 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from .adapters import EntityState, pump_target_value, pump_temperature_plan
+from .adapters import EntityState, pump_target_value, pump_temperature_plan, pump_tempo_mode_plan
 from .const import DOMAIN, MODES, PUMP_TARGET_KEYS
-from .controller import Controller
+from .controller import Controller, ControlSuspended
 from .emitters import emitter_plan, room_actuator_entities, room_emitters
 from .engine import Engine
 from .models import Snapshot, active_override, effective_config
+from .tempo import color, pump_stop_required, red_window_end
 from .validation import validate_config
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class HATransport:
-    def __init__(self, hass, pump_entity, pump_mode):
+    def __init__(self, hass, pump_entity, pump_mode, authorize_mode=None, permit_temperature=None):
         self.hass = hass
         self.pump_entity = pump_entity
         self.pump_mode = pump_mode
+        self.authorize_mode = authorize_mode
+        self.permit_temperature = permit_temperature
 
     def state(self, entity_id):
         state = self.hass.states.get(entity_id)
@@ -52,10 +55,23 @@ class HATransport:
 
     async def send(self, command):
         if command.entity_id == self.pump_entity:
-            if command.service != "set_temperature" or command.field != "temperature":
-                raise HomeAssistantError("Heat pump is setpoint-only; mode/on/off commands are forbidden.")
-            # Last-boundary validation, including a manual stop during head IO.
-            pump_temperature_plan(self.pump_entity, self.state(self.pump_entity), self.pump_mode, float(command.value))
+            if command.service == "set_temperature" and command.field == "temperature":
+                pump_temperature_plan(
+                    self.pump_entity, self.state(self.pump_entity), self.pump_mode, float(command.value)
+                )
+                if self.permit_temperature is not None and not self.permit_temperature():
+                    raise ControlSuspended
+            elif (
+                command.service == "set_hvac_mode"
+                and command.field == "hvac_mode"
+                and self.authorize_mode is not None
+                and self.authorize_mode(command)
+            ):
+                pump_tempo_mode_plan(self.pump_entity, self.state(self.pump_entity), self.pump_mode, command.value)
+            else:
+                raise HomeAssistantError(
+                    "Heat pump is setpoint-only outside an explicitly authorized Tempo transition."
+                )
         domain = command.entity_id.split(".", 1)[0]
         _LOGGER.info(
             "Command %s.%s to %s: %s=%s", domain, command.service, command.entity_id, command.field, command.value
@@ -75,7 +91,13 @@ class HeatCoordinator(DataUpdateCoordinator):
         self.config = effective_config(entry.data, entry.options)
         validate_config(self.config)
         self.engine = Engine()
-        self.transport = HATransport(hass, self.config["settings"]["pump_entity"], self.config["settings"]["pump_mode"])
+        self.transport = HATransport(
+            hass,
+            self.config["settings"]["pump_entity"],
+            self.config["settings"]["pump_mode"],
+            self.authorize_tempo_mode,
+            self.permit_pump_temperature,
+        )
         self.controller = Controller(
             self.transport, dt_util.now(), int(ValveEntityFeature.SET_POSITION), self.permit_commands
         )
@@ -88,6 +110,7 @@ class HeatCoordinator(DataUpdateCoordinator):
         self.last_reason = None
         self.last_alert = None
         self.snapshot = None
+        self.pump_events = []
 
     @property
     def settings(self):
@@ -105,6 +128,10 @@ class HeatCoordinator(DataUpdateCoordinator):
         if isinstance(saved, dict):
             self.runtime.update(saved)
         self.runtime.setdefault("overrides", {})
+        if not isinstance(self.runtime.get("tempo_control"), dict):
+            self.runtime["tempo_control"] = {}
+        self.controller.tempo_state = self.runtime.setdefault("tempo_control", {})
+        self.controller.save_tempo = lambda: self.store.async_save(self.runtime)
         try:
             validate_config({"settings": self.settings, "rooms": self.config["rooms"]})
         except ValueError:
@@ -128,6 +155,17 @@ class HeatCoordinator(DataUpdateCoordinator):
 
     @callback
     def schedule(self, _event=None):
+        if (
+            _event is not None
+            and hasattr(_event, "data")
+            and _event.data.get("entity_id") == self.settings["pump_entity"]
+        ):
+            old, new = _event.data.get("old_state"), _event.data.get("new_state")
+            pending = self.controller.pending.get(f"{self.settings['pump_entity']}:hvac_mode")
+            own = bool(
+                new and pending and pending.command.value == new.state and not getattr(new.context, "user_id", None)
+            )
+            self.pump_events.append((old.state if old else None, new.state if new else None, own))
         if self.closed or self.cancel_scheduled is not None:
             return
         self.cancel_scheduled = async_call_later(self.hass, 0.25, self.run_scheduled)
@@ -233,10 +271,68 @@ class HeatCoordinator(DataUpdateCoordinator):
             and all(t is None or t <= self.settings["water_max"] for t in (snapshot.water_in, snapshot.water_out))
         )
 
+    def authorize_tempo_mode(self, command):
+        if command is not self.controller.mode_authorization:
+            return False
+        if not self.permit_commands():
+            raise ControlSuspended
+        snap = self.build_snapshot()
+        stop = pump_stop_required(self.settings, snap.now, color(snap.today), self.runtime)
+        if any(old == "off" and new == self.settings["pump_mode"] and not own for old, new, own in self.pump_events):
+            raise ControlSuspended
+        if command.value == "off":
+            if not stop:
+                raise ControlSuspended
+            return True
+        decision = self.data
+        if decision is None:
+            return False
+        # Re-evaluate the economic authorization at the final service boundary.
+        live = replace(
+            decision,
+            pump_tempo_stop=stop,
+            override_active=bool(self.override("tempo_bypass") or self.override("force")),
+        )
+        return command.value == self.settings["pump_mode"] and self.controller.may_resume_tempo(
+            self.settings, live, snap.now
+        )
+
+    def permit_pump_temperature(self):
+        snap = self.build_snapshot()
+        return self.permit_commands() and not pump_stop_required(
+            self.settings, snap.now, color(snap.today), self.runtime
+        )
+
+    async def process_pump_events(self):
+        changed = False
+        now = dt_util.now()
+        until = red_window_end(color(self.text("tempo_today_entity")), now, self.settings["tempo_enabled"])
+        for old, new, own in self.pump_events:
+            if new == "off" and own and self.controller.tempo_state:
+                self.controller.tempo_state["confirmed"] = True
+                changed = True
+            elif new == "off" and old not in (None, "off", "unknown", "unavailable") and not own:
+                self.controller.tempo_state.clear()
+                self.runtime["overrides"].pop("tempo_bypass", None)
+                self.controller.pending.pop(f"{self.settings['pump_entity']}:hvac_mode", None)
+                self.controller.pending.pop(f"{self.settings['pump_entity']}:temperature", None)
+                changed = True
+            elif old == "off" and new == self.settings["pump_mode"] and not own and until and self.armed:
+                # Native UI, physical control, or another external controller:
+                # respect the observed relaunch rather than fighting it.
+                self.runtime["overrides"]["tempo_bypass"] = {"value": True, "until": until, "source": "pump_manual"}
+                self.controller.tempo_state.clear()
+                self.controller.pending.pop(f"{self.settings['pump_entity']}:hvac_mode", None)
+                changed = True
+        self.pump_events.clear()
+        if changed:
+            await self.store.async_save(self.runtime)
+
     async def async_evaluate(self):
         async with self.lock:
             if self.closed:
                 return
+            await self.process_pump_events()
             cfg = {"settings": self.settings, "rooms": self.config["rooms"]}
             self.snapshot = self.build_snapshot()
             decision = self.engine.evaluate(cfg, self.snapshot, self.runtime)
@@ -355,11 +451,11 @@ class HeatCoordinator(DataUpdateCoordinator):
             raise HomeAssistantError("Résoudre les défauts avant l'armement.")
         try:
             commands = [
-                pump_temperature_plan(
+                pump_tempo_mode_plan(
                     self.settings["pump_entity"],
                     self.transport.state(self.settings["pump_entity"]),
                     self.settings["pump_mode"],
-                    self.settings["pump_normal_target"],
+                    self.settings["pump_mode"],
                 )
             ]
             for key in PUMP_TARGET_KEYS:

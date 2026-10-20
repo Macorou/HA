@@ -1,4 +1,4 @@
-"""Acknowledged emitters and heat-pump setpoints; never heat-pump mode commands."""
+"""Acknowledged setpoints with a narrowly owned Tempo stop/resume exception."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from .adapters import Command, Transport, pump_temperature_plan
+from .adapters import Command, Transport, pump_target_value, pump_temperature_plan, pump_tempo_mode_plan
 from .emitters import emitter_plan, room_emitters
 from .models import Decision
 
@@ -41,6 +41,32 @@ class Controller:
         self.status = "observation"
         self.observed_on: bool | None = None
         self.transition = now
+        self.tempo_state: dict = {}
+        self.save_tempo = None
+        self.mode_authorization: Command | None = None
+
+    async def checkpoint_tempo(self):
+        if self.save_tempo is not None:
+            await self.save_tempo()
+
+    def owns_tempo_stop(self, entity_id):
+        return self.tempo_state.get("entity_id") == entity_id and self.tempo_state.get("confirmed") is True
+
+    def may_resume_tempo(self, cfg, decision, now):
+        if not self.owns_tempo_stop(cfg["pump_entity"]) or decision.pump_tempo_stop:
+            return False
+        try:
+            until = datetime.fromisoformat(self.tempo_state["until"])
+            return bool(until.tzinfo and (now >= until or decision.override_active or not cfg["tempo_enabled"]))
+        except (KeyError, TypeError, ValueError):
+            return False
+
+    async def apply_tempo_mode(self, command, now, interval):
+        self.mode_authorization = command
+        try:
+            return await self.apply(command, now, interval)
+        finally:
+            self.mode_authorization = None
 
     def reset_fault(self) -> None:
         self.fault = None
@@ -85,12 +111,13 @@ class Controller:
             self.status = "observation"
             self.pending.clear()
             return
-        # A temperature write can wake some devices. Send nothing when manually
-        # off, and never attempt to restore a previous mode, even for frost/solar.
-        if state is not None and state.state == "off":
-            self.status = "pump_off"
-            self.pending.clear()
-            return
+        if self.tempo_state and self.tempo_state.get("entity_id") != cfg["pump_entity"]:
+            self.tempo_state.clear()
+            await self.checkpoint_tempo()
+        pending_mode = self.pending.get(f"{cfg['pump_entity']}:hvac_mode")
+        if state is not None and state.state == "off" and pending_mode and pending_mode.command.value == "off":
+            self.tempo_state["confirmed"] = True
+            await self.checkpoint_tempo()
         if self.fault:
             self.status = "command_fault"
             return
@@ -102,11 +129,44 @@ class Controller:
             self.status = "suspended"
             return
         try:
+            if decision.pump_tempo_stop:
+                if state is None or not state.available:
+                    raise ValueError("pump_unavailable")
+                if state.state == "off":
+                    self.status = "tempo_stopped" if self.owns_tempo_stop(cfg["pump_entity"]) else "pump_off"
+                    return
+                stop = pump_tempo_mode_plan(cfg["pump_entity"], state, cfg["pump_mode"], "off")
+                if not decision.pump_tempo_until:
+                    raise ValueError("tempo_deadline_missing")
+                if not self.tempo_state:
+                    self.tempo_state.update(
+                        entity_id=cfg["pump_entity"], mode=state.state, until=decision.pump_tempo_until, confirmed=False
+                    )
+                    # Persist intent before the service call; only an acknowledged
+                    # stop earns permission to restore. An ambiguous stop fails off.
+                    await self.checkpoint_tempo()
+                ready = await self.apply_tempo_mode(stop, now, cfg["command_interval"])
+                if ready:
+                    self.tempo_state["confirmed"] = True
+                    await self.checkpoint_tempo()
+                self.status = "tempo_stopped" if ready else "tempo_stopping"
+                return
+            resuming = state is not None and state.state == "off" and self.may_resume_tempo(cfg, decision, now)
+            if state is not None and state.state == "off" and not resuming:
+                self.status = "pump_off"
+                return
+            if state is not None and state.state == cfg["pump_mode"] and self.tempo_state:
+                self.tempo_state.clear()
+                await self.checkpoint_tempo()
             # Check every capability before issuing any command.
             if decision.pump_target is None:
                 self.status = "suspended"
                 return
-            pump = pump_temperature_plan(cfg["pump_entity"], state, cfg["pump_mode"], decision.pump_target)
+            if resuming:
+                pump_target_value(state, decision.pump_target)
+                pump = pump_tempo_mode_plan(cfg["pump_entity"], state, cfg["pump_mode"], self.tempo_state["mode"])
+            else:
+                pump = pump_temperature_plan(cfg["pump_entity"], state, cfg["pump_mode"], decision.pump_target)
             plans = []
             for room in config["rooms"]:
                 opening = decision.rooms[room["id"]].opening
@@ -134,6 +194,12 @@ class Controller:
                         break
             if not all_ready:
                 self.status = "opening_emitters"
+                return
+            if resuming:
+                if await self.apply_tempo_mode(pump, now, cfg["command_interval"]):
+                    self.tempo_state.clear()
+                    await self.checkpoint_tempo()
+                self.status = "tempo_resuming"
                 return
             # Re-read mode after awaited head commands; never wake an externally
             # stopped pump or overwrite a switch to cooling/another native mode.

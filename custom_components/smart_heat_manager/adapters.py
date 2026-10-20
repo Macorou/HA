@@ -123,3 +123,16 @@ def pump_temperature_plan(entity_id: str, state: EntityState | None, mode: str, 
     if state.state != mode:
         raise ValueError("pump_external_mode")
     return Command(entity_id, "set_temperature", "temperature", value, "temperature", 0.01)
+
+
+def pump_tempo_mode_plan(entity_id: str, state: EntityState | None, expected_mode: str, value: str) -> Command:
+    """Capability check only. Tempo ownership/authorization is checked elsewhere."""
+    if state is None or not state.available:
+        raise ValueError("pump_unavailable")
+    if expected_mode not in ("heat", "auto") or value not in ("off", expected_mode):
+        raise ValueError("pump_mode_not_supported")
+    if state.state not in ("off", expected_mode):
+        raise ValueError("pump_external_mode")
+    if any(mode not in state.attributes.get("hvac_modes", []) for mode in ("off", expected_mode)):
+        raise ValueError("pump_modes_not_supported")
+    return Command(entity_id, "set_hvac_mode", "hvac_mode", value, None)
