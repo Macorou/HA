@@ -12,7 +12,17 @@ async def async_setup_entry(hass, entry, async_add_entities):
     c = entry.runtime_data
     async_add_entities(
         [
-            *(HeatSwitch(c, key) for key in ("armed", "automation_enabled", "solar_enabled", "force", "tempo_bypass")),
+            *(
+                HeatSwitch(c, key)
+                for key in (
+                    "armed",
+                    "automation_enabled",
+                    "solar_enabled",
+                    "force",
+                    "tempo_bypass",
+                    "night_schedule_enabled",
+                )
+            ),
             *(HeatSwitch(c, "room_solar", room) for room in c.config["rooms"]),
         ]
     )
@@ -32,6 +42,8 @@ class HeatSwitch(HeatEntity, SwitchEntity):
             return c.armed
         if self.key in ("force", "tempo_bypass"):
             return bool(c.override(self.key))
+        if self.key == "night_schedule_enabled":
+            return c.runtime.get(self.key, c.settings[self.key])
         if self.room:
             return c.runtime.get("room_solar", {}).get(self.room["id"], self.room["solar_enabled"])
         return c.runtime.get(self.key, c.settings["solar_enabled"] if self.key == "solar_enabled" else True)

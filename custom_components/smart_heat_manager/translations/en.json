@@ -493,6 +493,9 @@
       }
     },
     "switch": {
+      "night_schedule_enabled": {
+        "name": "Night schedule"
+      },
       "armed": {
         "name": "Physical control arming (session)"
       },
@@ -548,6 +551,14 @@
       },
       "pump_solar_target": {
         "name": "Solar heat pump setpoint"
+      }
+    },
+    "time": {
+      "night_start": {
+        "name": "Night start"
+      },
+      "night_end": {
+        "name": "Night end"
       }
     },
     "select": {

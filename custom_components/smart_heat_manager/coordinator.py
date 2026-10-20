@@ -23,6 +23,7 @@ from .controller import Controller, ControlSuspended
 from .emitters import emitter_plan, room_actuator_entities, room_emitters
 from .engine import Engine
 from .models import Snapshot, active_override, effective_config
+from .night import clock_time
 from .tempo import color, pump_stop_required, red_window_end
 from .validation import validate_config
 
@@ -118,7 +119,7 @@ class HeatCoordinator(DataUpdateCoordinator):
 
     @property
     def settings(self):
-        return self.config["settings"] | self.runtime.get("numbers", {})
+        return self.config["settings"] | self.runtime.get("numbers", {}) | self.runtime.get("times", {})
 
     @property
     def controlled_entities(self):
@@ -136,6 +137,15 @@ class HeatCoordinator(DataUpdateCoordinator):
             self.runtime["tempo_control"] = {}
         self.controller.tempo_state = self.runtime.setdefault("tempo_control", {})
         self.controller.save_tempo = lambda: self.store.async_save(self.runtime)
+        try:
+            times = self.runtime.get("times", {})
+            if not isinstance(times, dict) or set(times) - {"night_start", "night_end"}:
+                raise ValueError("night_time_invalid")
+            for value in times.values():
+                clock_time(value)
+        except ValueError:
+            self.runtime.pop("times", None)
+            _LOGGER.warning("Discarding invalid saved night schedule times")
         try:
             validate_config({"settings": self.settings, "rooms": self.config["rooms"]})
         except ValueError:
@@ -380,6 +390,16 @@ class HeatCoordinator(DataUpdateCoordinator):
             self.runtime.setdefault(key, {})[room_id] = value
         else:
             self.runtime[key] = value
+        await self.save()
+
+    async def set_time(self, key, value):
+        if key not in ("night_start", "night_end"):
+            raise HomeAssistantError("Horaire inconnu")
+        try:
+            normalized = clock_time(value.isoformat()).isoformat()
+        except (AttributeError, ValueError) as err:
+            raise HomeAssistantError("Horaire local invalide") from err
+        self.runtime.setdefault("times", {})[key] = normalized
         await self.save()
 
     async def set_override(self, key, value):

@@ -4,6 +4,7 @@ from homeassistant.components.select import SelectEntity
 
 from .const import MODES
 from .entity import HeatEntity
+from .night import night_active
 
 PARALLEL_UPDATES = 0
 
@@ -26,6 +27,12 @@ class HeatMode(HeatEntity, SelectEntity):
     def extra_state_attributes(self):
         return {
             "effective_mode": self.coordinator.data.mode,
+            "night_schedule_enabled": self.coordinator.runtime.get(
+                "night_schedule_enabled", self.coordinator.settings["night_schedule_enabled"]
+            ),
+            "night_window_active": night_active(
+                self.coordinator.settings, self.coordinator.runtime, self.coordinator.snapshot.now
+            ),
             "expires_at": self.coordinator.runtime["overrides"].get("mode", {}).get("until")
             if self.current_option != "auto"
             else None,

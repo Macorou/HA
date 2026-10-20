@@ -493,6 +493,9 @@
       }
     },
     "switch": {
+      "night_schedule_enabled": {
+        "name": "Planning nuit"
+      },
       "armed": {
         "name": "Armement des commandes (session)"
       },
@@ -548,6 +551,14 @@
       },
       "pump_solar_target": {
         "name": "Consigne PAC solaire"
+      }
+    },
+    "time": {
+      "night_start": {
+        "name": "Début de nuit"
+      },
+      "night_end": {
+        "name": "Fin de nuit"
       }
     },
     "select": {

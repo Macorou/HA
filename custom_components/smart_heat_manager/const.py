@@ -1,8 +1,8 @@
 """Configuration keys and conservative defaults (seconds, watts, Celsius)."""
 
 DOMAIN = "smart_heat_manager"
-VERSION = "0.3.0"
-PLATFORMS = ["climate", "sensor", "binary_sensor", "switch", "number", "select", "button"]
+VERSION = "0.4.0"
+PLATFORMS = ["climate", "sensor", "binary_sensor", "switch", "number", "select", "button", "time"]
 MODES = ["auto", "present", "absent", "night", "holiday", "manual"]
 PUMP_MODE_TARGETS = {
     "present": "pump_normal_target",  # Keep the existing entity and saved value.
@@ -22,6 +22,9 @@ DEFAULTS = {
     "pump_tempo_target": 17.0,
     "pump_solar_target": 22.0,
     "presence_enabled": False,
+    "night_schedule_enabled": False,
+    "night_start": "22:00:00",
+    "night_end": "07:00:00",
     "presence_delay": 300,
     "tempo_enabled": False,
     "tempo_unknown_blocks": True,

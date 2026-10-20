@@ -4,10 +4,13 @@ from math import isfinite
 
 from .const import PUMP_TARGET_KEYS
 from .emitters import room_actuator_entities
+from .night import clock_time
 
 
 def validate_config(config: dict) -> None:
     cfg, rooms = config["settings"], config["rooms"]
+    for key in ("night_start", "night_end"):
+        clock_time(cfg[key])
     if not rooms:
         raise ValueError("room_required")
     if cfg.get("solar_enabled") and not (

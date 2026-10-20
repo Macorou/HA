@@ -54,6 +54,19 @@ Les consignes PAC sont des entités `number` persistantes, modifiables sans code
 avant l'armement dans les limites et le pas exposés par la PAC.
 La PAC suit le même mode effectif que les pièces. En automatique, la présence
 temporisée choisit présence/absence si elle est configurée ; sinon présence.
+Depuis la version 0.4.0, le **Planning nuit** permet un passage quotidien automatique
+au profil nuit, avec les entités horaires **Début de nuit** et **Fin de nuit**.
+Les valeurs initiales sont 22 h et 7 h ; le planning est désactivé par défaut pour
+préserver le comportement existant. Ces préférences persistent après redémarrage.
+La plage suit l'heure locale de HA, peut traverser minuit, commence à l'heure de
+début incluse et finit à l'heure de fin exclue (réévaluation au plus tard sous 15 s).
+Des horaires identiques donnent une plage vide. Les dérogations de mode explicites
+et l'absence détectée restent prioritaires. Après une dérogation, Auto reprend le
+planning courant ; à la fin de la nuit, retour à la gestion présence/absence.
+Les consignes Nuit existantes de chaque pièce et de la PAC sont utilisées, sans
+confondre ces valeurs entre elles. Les priorités Tempo, solaire, hors-gel et
+sécurité restent inchangées. Le planning n'arme jamais le pilotage : en observation,
+seul le calcul change, aucun ordre physique n'est envoyé.
 Les autres profils se choisissent avec le mode général temporaire, dont la durée
 est réglable. À l'échéance, retour automatique, comme pour les pièces.
 L'ancien réglage « normale » devient « présence » : identifiant et valeur conservés.

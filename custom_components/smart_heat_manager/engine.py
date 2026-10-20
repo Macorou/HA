@@ -2,6 +2,7 @@
 
 from .const import PUMP_MODE_TARGETS
 from .models import Decision, Snapshot, active_override
+from .night import night_active
 from .presence import Presence
 from .regulation import regulate
 from .solar import Solar, surplus
@@ -24,6 +25,9 @@ class Engine:
                 if cfg["presence_enabled"]
                 else "present"
             )
+            # Detected absence and explicit mode overrides remain authoritative.
+            if mode == "present" and night_active(cfg, runtime, now):
+                mode = "night"
         today, tomorrow = color(snapshot.today), color(snapshot.tomorrow)
         tempo = cfg["tempo_enabled"] and restricted(today, now, cfg["tempo_unknown_blocks"])
         bypass = bool(active_override(overrides, "tempo_bypass", now))
