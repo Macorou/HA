@@ -116,8 +116,9 @@ async def test_switch_bypass_does_not_extend_itself_to_22(hass, tempo_installati
     await c.arm(False)
 
 
-async def test_reload_preserves_owner_but_needs_explicit_rearm(hass, installation, tempo_installation, freezer):
+async def test_reload_preserves_owner_and_arming_then_resumes_at_22(hass, installation, tempo_installation, freezer):
     c, calls = tempo_installation
+    await hass.async_start()
     await c.arm(True)
     await hass.async_block_till_done()
     await c.async_evaluate()
@@ -125,12 +126,10 @@ async def test_reload_preserves_owner_but_needs_explicit_rearm(hass, installatio
     await hass.config_entries.async_reload(installation.entry_id)
     await hass.async_block_till_done()
     c = installation.runtime_data
-    assert not c.armed
+    assert c.armed
     assert c.controller.owns_tempo_stop("climate.pump")
     freezer.move_to("2026-01-12 21:00:00+00:00")
     await c.async_evaluate()
-    assert hass.states.get("climate.pump").state == "off"
-    await c.arm(True)
     assert hass.states.get("climate.pump").state == "heat"
     await c.arm(False)
 

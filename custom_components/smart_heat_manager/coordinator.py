@@ -10,15 +10,17 @@ from math import isfinite
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.valve import ValveEntityFeature
-from homeassistant.core import Context, callback
+from homeassistant.core import Context, CoreState, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.event import async_call_later, async_track_state_change_event, async_track_time_interval
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .adapters import EntityState, pump_target_value, pump_temperature_plan, pump_tempo_mode_plan
 from .const import DOMAIN, MODES, PUMP_TARGET_KEYS
+from .control_state import dump_control, restore_control
 from .controller import Controller, ControlSuspended
 from .emitters import emitter_plan, room_actuator_entities, room_emitters
 from .engine import Engine
@@ -109,6 +111,8 @@ class HeatCoordinator(DataUpdateCoordinator):
         self.store = Store(hass, 1, f"{DOMAIN}.{entry.entry_id}")
         self.runtime = {"overrides": {}}
         self.armed = False
+        self.startup_pending = False
+        self.saved_control = None
         self.lock = asyncio.Lock()
         self.cancel_scheduled = None
         self.closed = False
@@ -151,6 +155,15 @@ class HeatCoordinator(DataUpdateCoordinator):
         except ValueError:
             self.runtime.pop("numbers", None)
             _LOGGER.warning("Discarding daily numeric preferences incompatible with the updated options")
+        # No stored operator choice means observation, including upgrades from
+        # the former non-persistent session switch. Never infer an opt-in.
+        self.armed = self.runtime.get("armed_requested") is True
+        self.startup_pending = self.armed and self.hass.state is not CoreState.running
+        restore_control(self.controller, self.runtime.get("control_state"), self.controlled_entities)
+        self.saved_control = self.runtime.get("control_state")
+        self.controller.save_state = self.checkpoint_control
+        if self.startup_pending:
+            self.entry.async_on_unload(async_at_started(self.hass, self.startup_complete))
         tracked = {v for k, v in self.settings.items() if k.endswith("_entity") and v}
         for room in self.config["rooms"]:
             tracked.update([room["sensor"], *room_actuator_entities(room)])
@@ -158,6 +171,18 @@ class HeatCoordinator(DataUpdateCoordinator):
         self.entry.async_on_unload(async_track_time_interval(self.hass, self.schedule, timedelta(seconds=15)))
         self.entry.async_on_unload(self.shutdown)
         await self.async_evaluate()
+
+    @callback
+    def startup_complete(self, _hass):
+        self.startup_pending = False
+        self.schedule()
+
+    async def checkpoint_control(self):
+        current = dump_control(self.controller)
+        if current != self.saved_control:
+            self.runtime["control_state"] = current
+            await self.store.async_save(self.runtime)
+            self.saved_control = current
 
     @callback
     def shutdown(self):
@@ -275,6 +300,7 @@ class HeatCoordinator(DataUpdateCoordinator):
     def permit_commands(self):
         if (
             not self.armed
+            or self.startup_pending
             or self.closed
             or not self.runtime.get("automation_enabled", True)
             or not all(
@@ -359,11 +385,18 @@ class HeatCoordinator(DataUpdateCoordinator):
             self.snapshot = self.build_snapshot()
             decision = self.engine.evaluate(cfg, self.snapshot, self.runtime)
             # Commands are still individually checked at the last boundary.
-            armed = self.armed and all(
-                self.settings[k]
-                for k in ("control_enabled", "hydraulic_confirmed", "exclusive_confirmed", "capabilities_confirmed")
+            armed = (
+                self.armed
+                and not self.startup_pending
+                and all(
+                    self.settings[k]
+                    for k in ("control_enabled", "hydraulic_confirmed", "exclusive_confirmed", "capabilities_confirmed")
+                )
             )
             await self.controller.tick(cfg, decision, self.snapshot.now, armed)
+            if self.armed and not armed:
+                self.controller.status = "suspended"
+            await self.checkpoint_control()
             reason = (decision.state, decision.reason, self.controller.status, self.controller.fault)
             if reason != self.last_reason:
                 _LOGGER.info("Decision %s (%s), controller %s", decision.state, decision.reason, self.controller.status)
@@ -470,6 +503,8 @@ class HeatCoordinator(DataUpdateCoordinator):
     async def arm(self, value):
         if not value:
             self.armed = False
+            self.runtime["armed_requested"] = False
+            await self.store.async_save(self.runtime)
             await self.async_evaluate()
             return
         if not all(
@@ -507,12 +542,22 @@ class HeatCoordinator(DataUpdateCoordinator):
                 raise ValueError("service_missing")
         except (ValueError, TypeError) as err:
             raise HomeAssistantError(f"Capacités non validées : {err}") from err
+        previous = self.runtime.get("armed_requested", False)
+        self.runtime["armed_requested"] = True
+        try:
+            await self.store.async_save(self.runtime)
+        except Exception:
+            self.runtime["armed_requested"] = previous
+            raise
         self.armed = True
         await self.async_evaluate()
 
     async def reset_fault(self):
         self.armed = False
+        self.runtime["armed_requested"] = False
         self.controller.reset_fault()
+        await self.checkpoint_control()
+        await self.store.async_save(self.runtime)
         await self.async_evaluate()
 
     def diagnostic_data(self):

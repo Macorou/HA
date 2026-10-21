@@ -24,7 +24,9 @@ Pendant un essai physique supervisé :
 4. Vérifier les trois consignes, le respect d'un arrêt manuel de la PAC et la
    limitation des commandes. Observer la modulation et les anti-cycles natifs.
 5. Provoquer une indisponibilité simulée, vérifier l'alerte et l'absence de spam d'ordres.
-6. Vérifier qu'un redémarrage désarme et laisse les protections natives opérationnelles.
+6. Vérifier qu'un redémarrage conserve le choix d'armement et attend HA démarré et
+   des mesures valides ; un arrêt manuel doit également persister. Vérifier les
+   défauts et accusés persistants, sans neutraliser les protections natives.
 7. Tester le retour en observation et la reprise contrôlée par l'ancien système si nécessaire.
 
 Pour Tempo, sur une instance de test avec entités fictives : vérifier l'arrêt à
@@ -32,7 +34,8 @@ Pour Tempo, sur une instance de test avec entités fictives : vérifier l'arrêt
 reprise à partir de 22 h seulement après un arrêt SHM confirmé. Une PAC déjà arrêtée
 manuellement doit rester éteinte. Tester les deux relances (interrupteur temporaire
 et bouton natif jusqu'à 22 h), la fin de dérogation, un arrêt manuel après relance,
-et le redémarrage de HA qui conserve l'historique d'arrêt mais exige un réarmement.
+et le redémarrage de HA qui conserve l'historique d'arrêt et le choix d'armement,
+sans reprise sur une intention non confirmée ou un défaut de commande.
 Ne pas faire ces essais par falsification de la couleur sur l'installation réelle.
 
 Ne supprimer définitivement VTherm qu'après réception complète et sauvegarde HA.

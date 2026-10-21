@@ -45,7 +45,8 @@ Deux relances manuelles sont possibles pendant la période rouge :
 
 Un arrêt manuel après une relance annule la reprise automatique connue de SHM.
 Le logiciel doit être armé, actif, sans défaut et HA doit fonctionner pour envoyer
-ces ordres. Un redémarrage désarme toujours : réarmer pour permettre la reprise.
+ces ordres. Depuis 0.5.0, le choix d'armement est mémorisé : le redémarrage attend
+la fin du démarrage de HA et des entrées valides avant de reprendre les commandes.
 Il ne s'agit pas d'une coupure électrique ; les protections natives restent actives.
 
 Les consignes PAC sont des entités `number` persistantes, modifiables sans code :
@@ -100,7 +101,7 @@ SHM ne peut pas déduire la connexion d'une sonde de son seul changement de temp
 Le délai de détection d'une perte dépend de cette source, pas de SHM.
 Les délais des mesures de puissance, de l'eau et des protections restent inchangés.
 Mettre à jour les fichiers puis redémarrer HA ; les pièces sont conservées et les
-commandes restent désarmées après redémarrage. Aucun changement de réglage requis.
+commandes suivent désormais le choix d'armement mémorisé (depuis 0.5.0).
 
 ### Têtes SONOFF TRVZB : deux réglages de vanne
 
@@ -138,7 +139,7 @@ VTherm peut alors continuer de piloter les équipements. Avant le pilotage réel
 4. Dans les options **Sécurités**, confirmer ces validations et permettre le pilotage.
 5. Activer l'interrupteur **Armement des commandes (session)** et superviser les essais.
 
-Un redémarrage ou rechargement HA désarme le contrôleur. Les dérogations encore
+Un redémarrage ou rechargement HA conserve le choix d'armement. Les dérogations encore
 valides sont conservées avec leur échéance, mais n'arment jamais les commandes.
 La PAC peut conserver son dernier mode natif : observation, pause ou désarmement
 signifient **arrêt des commandes**, et non extinction du chauffage.

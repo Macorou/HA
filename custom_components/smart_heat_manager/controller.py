@@ -44,6 +44,11 @@ class Controller:
         self.tempo_state: dict = {}
         self.save_tempo = None
         self.mode_authorization: Command | None = None
+        self.save_state = None
+
+    async def checkpoint(self):
+        if self.save_state is not None:
+            await self.save_state()
 
     async def checkpoint_tempo(self):
         if self.save_tempo is not None:
@@ -94,6 +99,8 @@ class Controller:
         # Record before awaiting: subsequent state events cannot duplicate the command.
         self.pending[command.key] = Pending(command, now)
         self.last_sent[command.key] = now
+        # Persist before the physical write, including an unacknowledged intent.
+        await self.checkpoint()
         async with asyncio.timeout(self.send_timeout):
             await self.transport.send(command)
         return command.matches(self.transport.state(command.entity_id))
@@ -122,6 +129,7 @@ class Controller:
             self.status = "command_fault"
             return
         self.check_pending(now, cfg["ack_timeout"])
+        await self.checkpoint()
         if self.fault:
             self.status = "command_fault"
             return

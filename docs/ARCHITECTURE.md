@@ -68,7 +68,17 @@ de fenêtre et la confirmation de l'arrêt. Une intention seule ne permet jamais
 rallumer après un redémarrage. Les transitions externes `off → mode attendu`
 pendant les heures rouges créent une dérogation jusqu'à 22 h ; les acquittements
 des propres reprises du contrôleur ne prolongent pas une dérogation temporaire.
-Le redémarrage conserve les préférences mais désarme, donc ne commande aucune reprise.
+Depuis 0.5.0, `runtime.armed_requested` mémorise le choix explicite de l'opérateur.
+Le redémarrage ou rechargement conserve ce choix, mais les commandes attendent
+que HA ait terminé son démarrage et que toutes les autorisations et mesures
+soient valides. Une préférence absente ou invalide ne vaut jamais activation.
+Le journal `runtime.control_state` conserve les défauts verrouillés, les ordres
+non acquittés et l'intervalle de commande. Chaque intention est persistée avant
+l'envoi physique. Un redémarrage n'efface donc ni un défaut ni un accusé en attente.
+Une transition Tempo interrompue sans confirmation reste ambiguë et bloque la
+commande, sans autoriser une reprise. Un arrêt explicite ou le bouton d'acquittement
+avec désarmement enregistre l'arrêt. Les protections suspendent les commandes
+sans effacer le choix d'armement.
 
 ## Électricité solaire
 

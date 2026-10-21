@@ -81,7 +81,7 @@
           "sensor_max_age": "Maximum age of power / water / protection readings",
           "water_max": "High water threshold: suspend commands"
         },
-        "description": "Independent hydraulic flow is required. Physical control must be armed after each restart. Suspension preserves physical states; native protections remain essential."
+        "description": "Independent hydraulic flow is required. Your arming choice survives restarts. Commands resume after HA startup only when permissions and measurements are valid. Command faults remain latched; native protections remain essential."
       },
       "room": {
         "title": "Room settings",
@@ -285,7 +285,7 @@
           "sensor_max_age": "Maximum age of power / water / protection readings",
           "water_max": "High water threshold: suspend commands"
         },
-        "description": "Independent hydraulic flow is required. Physical control must be armed after each restart. Suspension preserves physical states; native protections remain essential."
+        "description": "Independent hydraulic flow is required. Your arming choice survives restarts. Commands resume after HA startup only when permissions and measurements are valid. Command faults remain latched; native protections remain essential."
       },
       "room": {
         "title": "Room settings",
@@ -497,7 +497,7 @@
         "name": "Night schedule"
       },
       "armed": {
-        "name": "Physical control arming (session)"
+        "name": "Physical control arming (persistent)"
       },
       "automation_enabled": {
         "name": "Automations"

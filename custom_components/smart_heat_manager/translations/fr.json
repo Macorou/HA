@@ -81,7 +81,7 @@
           "sensor_max_age": "Âge maximal des mesures puissance / eau / protection",
           "water_max": "Seuil haut d’eau : suspendre les commandes"
         },
-        "description": "Le débit doit être garanti par l’hydraulique indépendamment des têtes. Les commandes reprennent uniquement après armement explicite, à chaque redémarrage. Une suspension conserve les états physiques ; les protections natives restent indispensables."
+        "description": "Le débit doit être garanti par l’hydraulique indépendamment des têtes. Votre choix d’armement est mémorisé après redémarrage. Les commandes reprennent après le démarrage de HA uniquement si les autorisations et les mesures sont valides. Les défauts de commande restent verrouillés ; les protections natives demeurent indispensables."
       },
       "room": {
         "title": "Paramètres de la pièce",
@@ -285,7 +285,7 @@
           "sensor_max_age": "Âge maximal des mesures puissance / eau / protection",
           "water_max": "Seuil haut d’eau : suspendre les commandes"
         },
-        "description": "Le débit doit être garanti par l’hydraulique indépendamment des têtes. Les commandes reprennent uniquement après armement explicite, à chaque redémarrage. Une suspension conserve les états physiques ; les protections natives restent indispensables."
+        "description": "Le débit doit être garanti par l’hydraulique indépendamment des têtes. Votre choix d’armement est mémorisé après redémarrage. Les commandes reprennent après le démarrage de HA uniquement si les autorisations et les mesures sont valides. Les défauts de commande restent verrouillés ; les protections natives demeurent indispensables."
       },
       "room": {
         "title": "Paramètres de la pièce",
@@ -497,7 +497,7 @@
         "name": "Planning nuit"
       },
       "armed": {
-        "name": "Armement des commandes (session)"
+        "name": "Armement des commandes (mémorisé)"
       },
       "automation_enabled": {
         "name": "Automatismes"

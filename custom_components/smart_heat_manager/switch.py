@@ -1,4 +1,4 @@
-"""Session arming, persistent feature toggles and expiring economic overrides."""
+"""Persistent operator arming, feature toggles and expiring economic overrides."""
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import EntityCategory
@@ -50,6 +50,8 @@ class HeatSwitch(HeatEntity, SwitchEntity):
 
     @property
     def extra_state_attributes(self):
+        if self.key == "armed":
+            return {"persistent": True, "waiting_for_ha_start": self.coordinator.startup_pending}
         if self.key == "night_schedule_enabled":
             return {"schedule_type": "night"}
         if self.key in ("force", "tempo_bypass"):
