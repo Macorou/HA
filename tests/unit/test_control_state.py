@@ -7,6 +7,7 @@ from datetime import UTC, datetime, timedelta
 from tests.support import FakeTransport, config
 from shm_core.adapters import Command
 from shm_core.controller import Controller, Pending
+from shm_core.controller import ControlSuspended
 from shm_core.control_state import dump_control, restore_control
 # isort: on
 
@@ -75,6 +76,20 @@ class ControlStateTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(self.transport.sent), 1)
         restarted.check_pending(self.now + timedelta(seconds=181), config()["settings"]["ack_timeout"])
         self.assertIsNotNone(restarted.fault)
+
+    async def test_disarm_during_storage_checkpoint_prevents_physical_write(self):
+        allowed = True
+        self.controller.permit = lambda: allowed
+
+        async def checkpoint():
+            nonlocal allowed
+            allowed = False
+
+        self.controller.save_state = checkpoint
+        command = Command("number.valve", "set_value", "value", 50, None)
+        with self.assertRaises(ControlSuspended):
+            await self.controller.apply(command, self.now, 60)
+        self.assertEqual(self.transport.sent, [])
 
 
 if __name__ == "__main__":

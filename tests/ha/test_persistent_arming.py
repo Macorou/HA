@@ -9,7 +9,14 @@ async def setup(hass, installation):
     hass.states.async_set(
         "climate.pump",
         "heat",
-        {"hvac_modes": ["off", "heat"], "temperature": 20, "min_temp": 16, "max_temp": 30, "target_temp_step": 1},
+        {
+            "hvac_modes": ["off", "heat"],
+            "supported_features": 385,
+            "temperature": 20,
+            "min_temp": 16,
+            "max_temp": 30,
+            "target_temp_step": 1,
+        },
     )
     hass.states.async_set("sensor.living", "25", {"unit_of_measurement": "°C"})
     settings = installation.data["settings"] | {

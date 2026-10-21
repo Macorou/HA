@@ -101,6 +101,8 @@ class Controller:
         self.last_sent[command.key] = now
         # Persist before the physical write, including an unacknowledged intent.
         await self.checkpoint()
+        if not self.permit():
+            raise ControlSuspended
         async with asyncio.timeout(self.send_timeout):
             await self.transport.send(command)
         return command.matches(self.transport.state(command.entity_id))
