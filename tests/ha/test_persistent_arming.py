@@ -3,6 +3,8 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import CoreState
 
 
 async def setup(hass, installation):
@@ -53,6 +55,7 @@ async def test_arm_survives_reload_and_manual_disarm_persists(hass, installation
 async def test_restored_arming_waits_for_ha_start_and_valid_sources(hass, installation):
     c = await setup(hass, installation)
     await c.arm(True)
+    hass.set_state(CoreState.starting)
     assert await hass.config_entries.async_reload(installation.entry_id)
     await hass.async_block_till_done()
     c = installation.runtime_data
@@ -61,7 +64,9 @@ async def test_restored_arming_waits_for_ha_start_and_valid_sources(hass, instal
     assert c.controller.status == "suspended"
     assert not c.permit_commands()
     hass.states.async_set("sensor.living", "unavailable")
-    await hass.async_start()
+    hass.set_state(CoreState.running)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
     await c.async_evaluate()
     assert c.armed
     assert not c.startup_pending
