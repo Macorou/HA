@@ -1,13 +1,13 @@
-# Smart Heat Manager — 0.3.0
+# Smart Heat Manager — 0.5.0
 
 Intégration personnalisée Home Assistant pour réguler des pièces à partir de
 sondes externes, coordonner une PAC existante et arbitrer Tempo EDF et surplus
 photovoltaïque. Indépendante de Versatile Thermostat. Interface française et anglaise.
 
 **Version initiale à réceptionner sur Home Assistant et sur l'installation réelle.**
-Elle démarre en observation, calcule les décisions et expose les entités sans envoyer
-de commandes. Le contrôleur physique est implémenté, avec un armement explicite par
-session ; aucune compatibilité matérielle LG non vérifiée n'est annoncée.
+Au premier usage, elle démarre en observation sans envoyer de commandes.
+Le contrôleur physique utilise un choix d'armement explicite, mémorisé après les
+redémarrages ; aucune compatibilité matérielle LG non vérifiée n'est annoncée.
 
 ## Installation locale
 
@@ -124,7 +124,8 @@ réels et la calibration de la tête avant de confirmer les capacités de pilota
 Pour mettre à jour depuis 0.1.0 : télécharger de nouveau l'intégration dans HACS,
 redémarrer HA, puis modifier les pièces depuis les options. Les pièces existantes
 sont conservées ; leurs TRVZB doivent être associées dans le nouveau menu dédié.
-Le rechargement conserve le retour en observation.
+Le rechargement conserve désormais le choix d'armement mémorisé ; désarmer
+explicitement avant de changer l'installation ou de comparer un autre régulateur.
 
 ## Premier usage et migration VTherm
 
@@ -137,7 +138,7 @@ VTherm peut alors continuer de piloter les équipements. Avant le pilotage réel
 3. Désactiver VTherm et toutes les automatisations qui commandent ces équipements,
    dont les anciens réglages/synchronisations de la PAC.
 4. Dans les options **Sécurités**, confirmer ces validations et permettre le pilotage.
-5. Activer l'interrupteur **Armement des commandes (session)** et superviser les essais.
+5. Activer l'interrupteur **Armement des commandes (mémorisé)** et superviser les essais.
 
 Un redémarrage ou rechargement HA conserve le choix d'armement. Les dérogations encore
 valides sont conservées avec leur échéance, mais n'arment jamais les commandes.

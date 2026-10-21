@@ -29,8 +29,8 @@ une liste `rooms`. Chaque pièce possède un UUID stable, une sonde externe et d
 actionneurs ; renommer une pièce ne change pas ses identifiants d'entité.
 L'assistant natif utilise des sélecteurs d'entités et de nombres. Les options
 remplacent la configuration effective et rechargent l'entrée. Les préférences
-quotidiennes et dérogations sont stockées avec leurs dates de fin UTC ; l'armement
-des commandes n'est jamais persisté.
+quotidiennes, le choix d'armement et le journal de commandes sont persistés.
+Les dérogations conservent leurs dates de fin UTC.
 
 ## Machine à états
 
