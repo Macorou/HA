@@ -1,7 +1,7 @@
 """Configuration keys and conservative defaults (seconds, watts, Celsius)."""
 
 DOMAIN = "smart_heat_manager"
-VERSION = "0.5.0"
+VERSION = "0.5.1"
 PLATFORMS = ["climate", "sensor", "binary_sensor", "switch", "number", "select", "button", "time"]
 MODES = ["auto", "present", "absent", "night", "holiday", "manual"]
 PUMP_MODE_TARGETS = {

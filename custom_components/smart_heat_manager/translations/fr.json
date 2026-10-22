@@ -434,6 +434,7 @@
         "state": {
           "observation": "Observation",
           "command_fault": "Ordre non confirmé",
+          "emitter_fault": "Défaut tête · pilotage PAC indépendant",
           "suspended": "Commandes suspendues",
           "minimum_on": "Durée minimale de marche",
           "minimum_off": "Durée minimale d’arrêt",

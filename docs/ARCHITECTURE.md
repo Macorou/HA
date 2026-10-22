@@ -41,17 +41,22 @@ besoin normal → chauffe ; surplus durable → élévation bornée des consigne
 
 Le résultat logique (`fault`, `paused`, `frost`, `tempo_blocked`, `heating`,
 `solar_heating`, `idle`) est distinct du transport (`observation`, `running`,
-`pump_off`, `adjusting_setpoint`, `opening_emitters`, `suspended`, `command_fault`).
+`pump_off`, `adjusting_setpoint`, `opening_emitters`, `emitter_fault`, `suspended`, `command_fault`).
 Une demande logique ne prouve jamais que le compresseur tourne.
 
-Le contrôleur confirme les émetteurs avant de modifier la température ambiante
-demandée à la PAC. La seule exception marche/arrêt est la fenêtre rouge Tempo :
+Les commandes d'un même émetteur restent séquencées et confirmées, mais depuis
+0.5.1 leurs accusés ne conditionnent plus la consigne de la PAC autonome. Un
+`command_not_applied` visant une tête configurée suspend toutes les commandes des
+têtes, sans suspendre la PAC indépendante. Le défaut reste verrouillé et persisté,
+même si un retour tardif correspond enfin à l'ordre. Un défaut PAC est prioritaire
+sur un défaut tête ; toute erreur globale, inconnue ou de journal reste bloquante.
+La seule exception marche/arrêt est la fenêtre rouge Tempo :
 arrêt, puis reprise d'un arrêt attribué à SHM et confirmé par retour d'état.
 Une barrière dans le transport exige une autorisation éphémère de ce contrôleur,
 revérifie la fenêtre/dérogation, l'armement, les protections et la propriété de
 l'arrêt avant tout changement de mode. Les consignes sont aussi bloquées pendant
 l'arrêt Tempo pour éviter qu'un appareil ne se réveille par une écriture de cible. En
-défaut il suspend les ordres et conserve les états physiques. La régulation native,
+défaut global il suspend les ordres et conserve les états physiques. La régulation native,
 les anti-cycles, l'ECS et la loi d'eau restent à la charge de la PAC. Les têtes
 peuvent fermer lorsque les pièces sont satisfaites : le débit indépendant est requis.
 
@@ -61,7 +66,8 @@ peut plafonner cette cible à la consigne de repli ; le solaire qualifié
 peut la relever avec une pièce éligible en demande. Les sept cibles sont des
 préférences persistantes modifiables en `number`. Le champ historique
 `pump_normal_target` conserve l'identité de la consigne présence et sa valeur.
-La pause et les défauts produisent une cible nulle (aucun ordre, pas une consigne zéro).
+La pause et les défauts des mesures/protections produisent une cible nulle
+(aucun ordre, pas une consigne zéro). Un défaut d'accusé tête n'annule pas cette cible.
 
 Le journal persistant `runtime.tempo_control` enregistre l'entité, le mode, la fin
 de fenêtre et la confirmation de l'arrêt. Une intention seule ne permet jamais de

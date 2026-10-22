@@ -124,7 +124,7 @@ class TRVZBTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.transport.sent, [])
         self.assertEqual(self.controller.status, "command_fault")
 
-    async def test_closing_ack_required_before_pump_setpoint(self):
+    async def test_closing_ack_required_for_head_mode_but_not_native_pump_target(self):
         original_send = self.transport.send
 
         async def send(command):
@@ -137,9 +137,10 @@ class TRVZBTests(unittest.IsolatedAsyncioTestCase):
         await self.tick(0)
         await self.tick(10)
         self.assertEqual(self.controller.status, "opening_emitters")
-        self.assertEqual(self.transport.state("climate.pump").attributes["temperature"], 17)
+        self.assertEqual(self.transport.state("climate.pump").attributes["temperature"], 20)
+        self.assertFalse(any(c.entity_id == "climate.head" for c in self.transport.sent))
         await self.tick(331)
-        self.assertEqual(self.controller.status, "command_fault")
+        self.assertEqual(self.controller.status, "emitter_fault")
 
     async def test_pair_closes_without_turning_off_autonomous_pump(self):
         await self.tick(0)

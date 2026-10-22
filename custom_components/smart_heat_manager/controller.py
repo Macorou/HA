@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 
 from .adapters import Command, Transport, pump_target_value, pump_temperature_plan, pump_tempo_mode_plan
-from .emitters import emitter_plan, room_emitters
+from .emitters import emitter_plan, room_actuator_entities, room_emitters
 from .models import Decision
 
 
@@ -77,20 +77,37 @@ class Controller:
         self.fault = None
         self.pending.clear()
 
-    def check_pending(self, now: datetime, timeout: float) -> None:
+    def emitter_fault(self, config: dict) -> bool:
+        """Only a known emitter acknowledgement fault may spare the native PAC.
+
+        Keep the fault latched, including after a late report or restart. Never
+        reinterpret transport, storage, unknown-entity or PAC faults as local.
+        """
+        prefix = "command_not_applied:"
+        if not self.fault or not self.fault.startswith(prefix):
+            return False
+        entity = self.fault[len(prefix) :]
+        return entity != config["settings"]["pump_entity"] and any(
+            entity in room_actuator_entities(room) for room in config["rooms"]
+        )
+
+    def check_pending(self, now: datetime, timeout: float, pump_entity: str | None = None) -> None:
         for key, item in list(self.pending.items()):
             if item.command.matches(self.transport.state(item.command.entity_id)):
                 del self.pending[key]
             elif (now - item.since).total_seconds() >= timeout:
-                self.fault = f"command_not_applied:{item.command.entity_id}"
+                # A late emitter must never mask a PAC fault. Existing faults
+                # remain latched even when a delayed report finally matches.
+                if self.fault is None or item.command.entity_id == pump_entity:
+                    self.fault = f"command_not_applied:{item.command.entity_id}"
 
     async def apply(self, command: Command, now: datetime, interval: float) -> bool:
         if not self.permit():
             raise ControlSuspended
-        if command.matches(self.transport.state(command.entity_id)):
-            return True
         if command.key in self.pending:
             return False
+        if command.matches(self.transport.state(command.entity_id)):
+            return True
         if command.key in self.last_sent and (now - self.last_sent[command.key]).total_seconds() < interval:
             return False
         domain = command.entity_id.split(".", 1)[0]
@@ -127,12 +144,12 @@ class Controller:
         if state is not None and state.state == "off" and pending_mode and pending_mode.command.value == "off":
             self.tempo_state["confirmed"] = True
             await self.checkpoint_tempo()
-        if self.fault:
+        if self.fault and not self.emitter_fault(config):
             self.status = "command_fault"
             return
-        self.check_pending(now, cfg["ack_timeout"])
+        self.check_pending(now, cfg["ack_timeout"], cfg["pump_entity"])
         await self.checkpoint()
-        if self.fault:
+        if self.fault and not self.emitter_fault(config):
             self.status = "command_fault"
             return
         if decision.state in ("fault", "paused"):
@@ -178,7 +195,11 @@ class Controller:
             else:
                 pump = pump_temperature_plan(cfg["pump_entity"], state, cfg["pump_mode"], decision.pump_target)
             plans = []
-            for room in config["rooms"]:
+            # A confirmed independent hydraulic flow is mandatory for the
+            # integration. The native PAC does not depend on room valve ACKs.
+            # Leave ALL emitter commands suspended while an emitter fault is
+            # latched; the operator must investigate/reset them explicitly.
+            for room in [] if self.emitter_fault(config) else config["rooms"]:
                 opening = decision.rooms[room["id"]].opening
                 for emitter in room_emitters(room):
                     plans.append(
@@ -202,9 +223,6 @@ class Controller:
                     all_ready = all_ready and ready
                     if not ready:
                         break
-            if not all_ready:
-                self.status = "opening_emitters"
-                return
             if resuming:
                 if await self.apply_tempo_mode(pump, now, cfg["command_interval"]):
                     self.tempo_state.clear()
@@ -219,7 +237,12 @@ class Controller:
                 return
             pump = pump_temperature_plan(cfg["pump_entity"], current, cfg["pump_mode"], decision.pump_target)
             ready = await self.apply(pump, now, cfg["command_interval"])
-            self.status = "running" if ready else "adjusting_setpoint"
+            if self.emitter_fault(config):
+                self.status = "emitter_fault"
+            elif not all_ready:
+                self.status = "opening_emitters"
+            else:
+                self.status = "running" if ready else "adjusting_setpoint"
         except ControlSuspended:
             self.status = "suspended"
         except Exception as err:  # Service implementations can raise third-party errors.

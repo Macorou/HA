@@ -35,8 +35,19 @@ reprise à partir de 22 h seulement après un arrêt SHM confirmé. Une PAC déj
 manuellement doit rester éteinte. Tester les deux relances (interrupteur temporaire
 et bouton natif jusqu'à 22 h), la fin de dérogation, un arrêt manuel après relance,
 et le redémarrage de HA qui conserve l'historique d'arrêt et le choix d'armement,
-sans reprise sur une intention non confirmée ou un défaut de commande.
+sans reprise sur une intention non confirmée ou un défaut de commande PAC/global.
 Ne pas faire ces essais par falsification de la couleur sur l'installation réelle.
+
+### Régression 0.5.1 : défaut tête et profil PAC
+
+Sur transport simulé, refuser le retour d'un ordre de tête, attendre le délai
+d'accusé, puis passer en absence. La PAC doit recevoir sa cible absence sans
+ordre marche/arrêt ordinaire ; les têtes ne doivent recevoir aucun nouvel ordre.
+Recharger avec le journal 0.5.0 : même résultat, sans effacer le défaut ni
+désarmer. Un retour de tête tardif ne relance pas les têtes. Vérifier ensuite
+que le défaut PAC prend la priorité, qu'un arrêt manuel reste respecté et que
+les protections/mesures invalides ou la pause suspendent toujours les commandes.
+Les cas Tempo doivent garder la propriété de l'arrêt et l'autorisation à 22 h.
 
 Ne supprimer définitivement VTherm qu'après réception complète et sauvegarde HA.
 

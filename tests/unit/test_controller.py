@@ -61,17 +61,18 @@ class ControllerTests(unittest.IsolatedAsyncioTestCase):
         await self.tick(691, heat=False)
         self.assertEqual(float(self.transport.state("number.valve").state), 0)
 
-    async def test_refused_command_latches_and_never_starts_pump(self):
+    async def test_refused_pump_command_is_global_and_never_retried(self):
         self.transport.acknowledge = False
         await self.tick(0)
         await self.tick(300)
         await self.tick(10)
-        self.assertEqual(len(self.transport.sent), 1)
+        self.assertEqual(len(self.transport.sent), 2)
         await self.tick(31)
         self.assertEqual(self.controller.status, "command_fault")
         self.assertIn("command_not_applied", self.controller.fault)
         await self.tick(400)
-        self.assertEqual(len(self.transport.sent), 1)
+        self.assertEqual(len(self.transport.sent), 2)
+        self.assertEqual(self.controller.fault, "command_not_applied:climate.pump")
 
     async def test_cloud_error_latches_without_retry(self):
         self.transport.failure = True
@@ -142,12 +143,12 @@ class ControllerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(self.transport.sent), count)
         self.assertEqual(restarted.status, "observation")
 
-    async def test_pump_setpoint_requires_emitter_ack(self):
+    async def test_autonomous_pump_setpoint_does_not_wait_for_emitter_ack(self):
         self.transport.acknowledge = False
         await self.tick(0)
         await self.tick(10)
         self.assertEqual(self.controller.status, "opening_emitters")
-        self.assertTrue(all(c.entity_id != "climate.pump" for c in self.transport.sent))
+        self.assertEqual([c.entity_id for c in self.transport.sent], ["number.valve", "climate.pump"])
 
     def test_climate_adapter_clamps_and_respects_step(self):
         state = EntityState(

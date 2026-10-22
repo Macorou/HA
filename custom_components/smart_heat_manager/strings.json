@@ -434,6 +434,7 @@
         "state": {
           "observation": "Observation",
           "command_fault": "Unconfirmed command",
+          "emitter_fault": "Emitter fault; independent heat pump control",
           "suspended": "Commands suspended",
           "minimum_on": "Minimum on time",
           "minimum_off": "Minimum off time",

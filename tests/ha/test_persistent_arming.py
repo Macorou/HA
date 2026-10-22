@@ -89,7 +89,7 @@ async def test_fault_and_acknowledgement_remain_explicit(hass, installation):
     await hass.async_block_till_done()
     c = installation.runtime_data
     assert c.armed
-    assert c.controller.status == "command_fault"
+    assert c.controller.status == "emitter_fault"
     assert c.controller.fault == "command_not_applied:number.valve"
     await c.reset_fault()
     assert not c.armed

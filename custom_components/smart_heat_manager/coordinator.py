@@ -403,9 +403,14 @@ class HeatCoordinator(DataUpdateCoordinator):
                 self.last_reason = reason
             alert = self.controller.fault or (", ".join(decision.faults) if decision.faults else None)
             if alert and alert != self.last_alert:
+                scope = (
+                    "Commandes des têtes suspendues ; la PAC reste pilotée indépendamment sous réserve de ses protections."
+                    if self.controller.emitter_fault(cfg) and not decision.faults
+                    else "Commandes suspendues."
+                )
                 persistent_notification.async_create(
                     self.hass,
-                    f"Smart Heat Manager : {alert}. Commandes suspendues ; vérifier les diagnostics et l'installation.",
+                    f"Smart Heat Manager : {alert}. {scope} Vérifier les diagnostics et l'installation.",
                     title="Smart Heat Manager",
                     notification_id=f"{DOMAIN}_{self.entry.entry_id}",
                 )
@@ -569,6 +574,7 @@ class HeatCoordinator(DataUpdateCoordinator):
             "controller": {
                 "state": self.controller.status,
                 "fault": self.controller.fault,
+                "fault_scope": "emitters" if self.controller.emitter_fault(self.config) else "global",
                 "pending": {
                     key: {"command": asdict(item.command), "since": item.since.isoformat()}
                     for key, item in self.controller.pending.items()

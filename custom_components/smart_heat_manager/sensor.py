@@ -22,6 +22,7 @@ ENUMS = {
     "controller": [
         "observation",
         "command_fault",
+        "emitter_fault",
         "suspended",
         "minimum_on",
         "minimum_off",
@@ -77,6 +78,15 @@ class HeatSensor(HeatEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self):
+        if self.key == "controller":
+            controller = self.coordinator.controller
+            return {
+                "fault_scope": "emitters"
+                if controller.emitter_fault(self.coordinator.config)
+                else ("global" if controller.fault else None),
+                "emitter_commands_suspended": controller.emitter_fault(self.coordinator.config),
+                "command_fault": controller.fault,
+            }
         if self.key == "pump_target":
             return {
                 "effective_profile": self.coordinator.data.mode,

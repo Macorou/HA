@@ -1,4 +1,8 @@
-# Smart Heat Manager — 0.5.0
+# Smart Heat Manager — 0.5.1
+
+Correctif 0.5.1 : un ordre de tête non confirmé ne fige plus les consignes de la
+PAC autonome. Le défaut reste visible et verrouillé, et toutes les commandes des
+têtes restent suspendues jusqu'à vérification et acquittement explicite.
 
 Intégration personnalisée Home Assistant pour réguler des pièces à partir de
 sondes externes, coordonner une PAC existante et arbitrer Tempo EDF et surplus
@@ -44,7 +48,7 @@ Deux relances manuelles sont possibles pendant la période rouge :
   pilotes avant l'armement, pour éviter qu'ils ne contournent involontairement Tempo.
 
 Un arrêt manuel après une relance annule la reprise automatique connue de SHM.
-Le logiciel doit être armé, actif, sans défaut et HA doit fonctionner pour envoyer
+Le logiciel doit être armé, actif, sans défaut global et HA doit fonctionner pour envoyer
 ces ordres. Depuis 0.5.0, le choix d'armement est mémorisé : le redémarrage attend
 la fin du démarrage de HA et des entrées valides avant de reprendre les commandes.
 Il ne s'agit pas d'une coupure électrique ; les protections natives restent actives.
@@ -80,7 +84,9 @@ autorisée est en demande, sans abaisser une cible de profil plus élevée.
 Les corrections blanc/rouge et le forçage général s'appliquent aussi à la PAC.
 Ils doivent rester compatibles avec la plage et le pas natifs (sinon commandes
 suspendues, pas de consigne arrondie en silence).
-Pause ou défaut : aucun ordre, dernière consigne conservée.
+Pause ou défaut global : aucun ordre, dernière consigne conservée.
+Un défaut d'accusé de tête identifié suspend les têtes, pas le suivi indépendant
+des profils de la PAC ; un défaut PAC reste bloquant pour l'ensemble.
 Le solaire et le hors-gel logiciel ne relancent pas automatiquement la PAC pendant
 les heures rouges confirmées ; une dérogation manuelle est nécessaire. Vérifier
 le risque de gel avec l'installateur et conserver les protections natives.
@@ -177,11 +183,15 @@ bornées à ses capacités. Cela exige une calibration : son retour de consigne
 ne prouve pas l'ouverture mécanique de la vanne. Les `number` et `valve` reçoivent
 une ouverture proportionnelle à l'écart de température.
 
-En défaut (sonde, connexion, protection, eau trop chaude ou ordre non appliqué), les
+En défaut global (sonde, connexion, protection, eau trop chaude ou ordre PAC non appliqué), les
 commandes sont suspendues et les états physiques conservés. Les protections LG,
 le hors-gel matériel et la garantie hydraulique indépendante restent indispensables.
 Un défaut de commande nécessite l'acquittement, qui désarme, puis un réarmement.
 Un défaut de mesure se résorbe quand les données sont de nouveau valides.
+Seul `command_not_applied` visant une entité de tête actuellement configurée est
+isolé : la PAC suit encore ses profils et sa politique Tempo, sous les mêmes
+protections. Une confirmation tardive ne relance pas les têtes. Un journal invalide,
+un défaut de transport non attribuable ou une entité inconnue ne sont jamais isolés.
 
 Le transport est extensible ; aucun adaptateur Modbus n'est livré dans cette version.
 Le calcul solaire favorise l'autoconsommation sans garantie d'import réseau nul.

@@ -138,7 +138,8 @@ pas/plage natifs. Le forçage général relève au moins au niveau présence.
 Le préchauffage avant un jour rouge peut relever la cible du profil de l'écart
 configuré, sans dépasser la cible solaire ni abaisser une consigne plus haute.
 
-Les têtes sont confirmées avant l'ajustement PAC. Elles peuvent fermer dès que
+Les réglages successifs d'une même tête sont confirmés avant de poursuivre sa
+séquence, sans retarder l'ajustement indépendant de la PAC. Elles peuvent fermer dès que
 les pièces sont satisfaites ; le circuit de référence et le débit hydraulique
 indépendant sont indispensables. La PAC gère elle-même la modulation et les
 minima marche/arrêt. Les anciens réglages `min_on`, `min_off`, `demand_delay` et
@@ -147,6 +148,11 @@ SHM conserve l'intervalle de commande (60 s initialement) et les accusés (180 s
 
 Les ordres non appliqués sont signalés, sans boucle de tentatives. Le bouton
 Acquitter efface le verrou de commande et désarme ; vérifier la cause puis réarmer.
+Depuis 0.5.1, un défaut `command_not_applied` sur une tête configurée suspend
+toutes les têtes mais laisse la PAC suivre les profils et Tempo. L'état affiché
+est **Défaut tête · pilotage PAC indépendant**. Un retour tardif ne relance pas
+les têtes. Les défauts PAC, les mesures invalides et les protections générales
+restent bloquants ; cette isolation ne masque pas un problème Zigbee.
 Les sondes de température des pièces utilisent la disponibilité déclarée par leur
 intégration source, sans expiration sur l'horodatage HA : une sonde MQTT peut émettre
 une valeur identique sans actualiser cet horodatage. Les états absents, `unknown`,
