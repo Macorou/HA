@@ -239,3 +239,43 @@ async def test_denied_user_service_event_cannot_induce_integration_owned_write(
         await c.async_evaluate()
     assert c.pump_manual_target is None
     assert calls == []
+
+
+async def test_delayed_native_readback_is_not_duplicated_or_overwritten(hass, manual_installation, hass_admin_user):
+    c, calls = manual_installation
+    hass.bus.async_fire(
+        EVENT_CALL_SERVICE,
+        {
+            "domain": "climate",
+            "service": "set_temperature",
+            "service_data": {"entity_id": "climate.pump", "temperature": 21},
+        },
+        context=Context(user_id=hass_admin_user.id),
+    )
+    await hass.async_block_till_done()
+    assert c.pump_manual_events
+    assert not c.permit_pump_temperature()  # An in-flight automatic cycle yields.
+    await c.async_evaluate()
+    assert c.data.pump_target == 21
+    assert c.controller.pending["climate.pump:temperature"].command.value == 21
+    assert calls == []  # Native request is already executing, do not repeat it.
+    state = hass.states.get("climate.pump")
+    hass.states.async_set("climate.pump", "heat", dict(state.attributes) | {"temperature": 21})
+    await hass.async_block_till_done()
+    await c.async_evaluate()
+    assert "climate.pump:temperature" not in c.controller.pending
+    assert c.controller.fault is None
+    assert calls == []
+
+
+async def test_native_manual_off_stays_off_even_with_pac_temperature_hold(hass, manual_installation, hass_admin_user):
+    c, calls = manual_installation
+    state = hass.states.get("climate.pump")
+    hass.states.async_set("climate.pump", "off", dict(state.attributes))
+    await hass.async_block_till_done()
+    await ui_temperature(hass, hass_admin_user, 21)
+    await c.async_evaluate()
+    assert c.pump_manual_target == 21
+    assert c.controller.status == "pump_off"
+    assert hass.states.get("climate.pump").state == "off"
+    assert len(calls) == 1  # Only the user's direct setpoint call.

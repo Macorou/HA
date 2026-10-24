@@ -71,7 +71,7 @@ class Engine:
         faults = []
         pump_manual = None
         pump_item = overrides.get("pump_target", {})
-        if isinstance(pump_item, dict) and pump_item.get("entity_id") == cfg["pump_entity"]:
+        if cfg.get("pump_entity") and isinstance(pump_item, dict) and pump_item.get("entity_id") == cfg["pump_entity"]:
             pump_manual = active_override(overrides, "pump_target", now)
             if pump_manual is not None and (
                 isinstance(pump_manual, bool) or not isinstance(pump_manual, (int, float)) or not isfinite(pump_manual)

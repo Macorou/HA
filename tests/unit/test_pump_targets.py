@@ -157,6 +157,11 @@ class PumpTargetTests(unittest.TestCase):
             self.assertIn("invalid_pump_override", result.faults)
             self.assertIsNone(result.pump_target)
 
+    def test_offline_engine_without_physical_pump_identity_still_simulates(self):
+        self.cfg["settings"].pop("pump_entity")
+        result = Engine().evaluate(self.cfg, Snapshot(self.now, {"living": 19}), {})
+        self.assertEqual(result.pump_target, 21)
+
 
 if __name__ == "__main__":
     unittest.main()
