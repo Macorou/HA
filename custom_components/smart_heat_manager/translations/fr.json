@@ -563,6 +563,13 @@
       }
     },
     "select": {
+      "pump_override": {
+        "name": "Mode PAC temporaire",
+        "state": {
+          "auto": "Automatique",
+          "manual": "Manuel"
+        }
+      },
       "mode": {
         "name": "Mode général temporaire",
         "state": {

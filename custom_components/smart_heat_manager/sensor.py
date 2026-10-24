@@ -89,7 +89,12 @@ class HeatSensor(HeatEntity, SensorEntity):
             }
         if self.key == "pump_target":
             return {
-                "effective_profile": self.coordinator.data.mode,
+                "effective_profile": self.coordinator.data.pump_profile,
+                "rooms_effective_profile": self.coordinator.data.mode,
+                "manual_target": self.coordinator.pump_manual_target,
+                "override_until": self.coordinator.runtime["overrides"].get("pump_target", {}).get("until")
+                if self.coordinator.pump_manual_target is not None
+                else None,
                 "pump_control_policy": "setpoints_with_tempo_stop",
                 "tempo_shutdown_requested": self.coordinator.data.pump_tempo_stop,
                 "tempo_shutdown_until": self.coordinator.data.pump_tempo_until,

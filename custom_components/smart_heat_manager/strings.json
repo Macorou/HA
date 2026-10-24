@@ -563,6 +563,13 @@
       }
     },
     "select": {
+      "pump_override": {
+        "name": "Temporary heat pump mode",
+        "state": {
+          "auto": "Automatic",
+          "manual": "Manual"
+        }
+      },
       "mode": {
         "name": "Temporary global mode",
         "state": {

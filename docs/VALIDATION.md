@@ -9,6 +9,14 @@ dans `hacs.json` est une cible minimale, pas une certification de toutes les ver
 
 ## Scénarios de réception sur HA
 
+Régression 0.6.0 sur entités fictives : augmenter/baisser la PAC depuis son service
+HA avec contexte utilisateur ; vérifier sa seule dérogation, sans modification
+des profils des pièces. Régler deux thermostats SHM de pièce à des valeurs
+distinctes, revenir en auto sur l'un puis sur la PAC : chaque retour doit rester
+local. Vérifier clics successifs, expiration, reload, observation, ancienne intention
+automatique en attente, rapports cloud, contexte automatique et utilisateur refusé.
+Ne jamais déduire une dérogation d'un état restauré ou d'un simple rapport.
+
 En observation, comparer les cibles, états et motifs avec les attentes pour chaque
 pièce. Tester bleu, blanc, rouge HP/HC, expiration de la dérogation Tempo, consigne
 manuelle, variations du surplus et perte d'une mesure. Utiliser les entités fictives

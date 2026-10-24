@@ -34,6 +34,21 @@ Les dérogations conservent leurs dates de fin UTC.
 
 ## Machine à états
 
+Depuis 0.6.0, `overrides.pump_target` stocke une cible et échéance propres à
+l'entité PAC (`entity_id`). `Decision.pump_profile` distingue ce profil PAC du
+profil des pièces `Decision.mode`. Les dérogations `room_<id>` sont inchangées.
+Le sélecteur PAC auto ne touche jamais aux dérogations des pièces.
+
+Le bus HA `call_service` capture les demandes utilisateur explicites sur la PAC,
+pas les rapports cloud. Les contextes des commandes SHM sont identifiés et bornés
+en mémoire ; aucun écho n'active ou ne prolonge le mode manuel. Les droits de
+commande PAC sont vérifiés avant adoption, car l'événement HA précède ces droits
+dans le dispatch natif. La dernière demande valide remplace l'intention automatique
+en attente sans acquitter un défaut verrouillé. Une intention manuelle encore en
+file inhibe une écriture PAC automatique concurrente ; la demande native n'est pas
+dupliquée tant que son retour est attendu. La dérogation est persistée avant
+évaluation. Les protections, l'armement et la politique Tempo restent prioritaires.
+
 Priorité : défaut matériel ou donnée essentielle manquante → suspension des
 commandes ; pause automatique → aucune commande ; hors-gel → besoin prioritaire ;
 dérogation économique temporisée → autorisation ; Tempo rouge HP → blocage ;

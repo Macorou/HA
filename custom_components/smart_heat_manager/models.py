@@ -62,6 +62,7 @@ class Decision:
     pump_target: float | None = None
     pump_tempo_stop: bool = False
     pump_tempo_until: str | None = None
+    pump_profile: str | None = None
 
 
 def effective_config(data: dict, options: dict | None = None) -> dict[str, Any]:

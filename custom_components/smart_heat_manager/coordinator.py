@@ -4,12 +4,15 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections import deque
 from dataclasses import asdict, replace
 from datetime import timedelta
 from math import isfinite
 
+from homeassistant.auth.permissions.const import POLICY_CONTROL
 from homeassistant.components import persistent_notification
 from homeassistant.components.valve import ValveEntityFeature
+from homeassistant.const import EVENT_CALL_SERVICE
 from homeassistant.core import Context, CoreState, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.event import async_call_later, async_track_state_change_event, async_track_time_interval
@@ -18,10 +21,10 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from .adapters import EntityState, pump_target_value, pump_temperature_plan, pump_tempo_mode_plan
+from .adapters import Command, EntityState, pump_target_value, pump_temperature_plan, pump_tempo_mode_plan
 from .const import DOMAIN, MODES, PUMP_TARGET_KEYS
 from .control_state import dump_control, restore_control
-from .controller import Controller, ControlSuspended
+from .controller import Controller, ControlSuspended, Pending
 from .emitters import emitter_plan, room_actuator_entities, room_emitters
 from .engine import Engine
 from .models import Snapshot, active_override, effective_config
@@ -39,6 +42,7 @@ class HATransport:
         self.pump_mode = pump_mode
         self.authorize_mode = authorize_mode
         self.permit_temperature = permit_temperature
+        self.own_contexts = deque(maxlen=128)
 
     def state(self, entity_id):
         state = self.hass.states.get(entity_id)
@@ -82,12 +86,14 @@ class HATransport:
         value = command.value
         if domain == "climate" and command.field == "temperature" and self.hass.config.units.temperature_unit == "°F":
             value = float(value) * 9 / 5 + 32
+        context = Context()
+        self.own_contexts.append(context.id)
         await self.hass.services.async_call(
             domain,
             command.service,
             {"entity_id": command.entity_id, command.field: value},
             blocking=True,
-            context=Context(),
+            context=context,
         )
 
 
@@ -120,6 +126,7 @@ class HeatCoordinator(DataUpdateCoordinator):
         self.last_alert = None
         self.snapshot = None
         self.pump_events = []
+        self.pump_manual_events = []
 
     @property
     def settings(self):
@@ -168,6 +175,7 @@ class HeatCoordinator(DataUpdateCoordinator):
         for room in self.config["rooms"]:
             tracked.update([room["sensor"], *room_actuator_entities(room)])
         self.entry.async_on_unload(async_track_state_change_event(self.hass, list(tracked), self.schedule))
+        self.entry.async_on_unload(self.hass.bus.async_listen(EVENT_CALL_SERVICE, self.pump_service))
         self.entry.async_on_unload(async_track_time_interval(self.hass, self.schedule, timedelta(seconds=15)))
         self.entry.async_on_unload(self.shutdown)
         await self.async_evaluate()
@@ -191,6 +199,37 @@ class HeatCoordinator(DataUpdateCoordinator):
         if self.cancel_scheduled:
             self.cancel_scheduled()
             self.cancel_scheduled = None
+
+    @callback
+    def pump_service(self, event):
+        """Adopt authenticated UI/API temperature requests, never our own writes.
+
+        Observe the request rather than cloud temperature reports: reports can
+        arrive late, on startup, or without the service context. They must not
+        extend a manual hold or turn an automatic night setpoint into manual.
+        """
+        if self.closed or not event.context.user_id or event.context.id in self.transport.own_contexts:
+            return
+        data = event.data
+        if data.get("domain") != "climate" or data.get("service") != "set_temperature":
+            return
+        service = data.get("service_data", {})
+        entities = service.get("entity_id", [])
+        if isinstance(entities, str):
+            entities = [entities]
+        if not isinstance(entities, (list, tuple)):
+            return
+        if self.settings["pump_entity"] not in entities or "temperature" not in service:
+            return
+        try:
+            value = float(service["temperature"])
+            if self.hass.config.units.temperature_unit == "°F":
+                value = (value - 32) * 5 / 9
+            value = pump_target_value(self.transport.state(self.settings["pump_entity"]), value)
+        except (TypeError, ValueError):
+            return
+        self.pump_manual_events.append((value, dt_util.utcnow(), event.context.user_id))
+        self.schedule()
 
     @callback
     def schedule(self, _event=None):
@@ -347,8 +386,10 @@ class HeatCoordinator(DataUpdateCoordinator):
 
     def permit_pump_temperature(self):
         snap = self.build_snapshot()
-        return self.permit_commands() and not pump_stop_required(
-            self.settings, snap.now, color(snap.today), self.runtime
+        return (
+            not self.pump_manual_events
+            and self.permit_commands()
+            and not pump_stop_required(self.settings, snap.now, color(snap.today), self.runtime)
         )
 
     async def process_pump_events(self):
@@ -381,6 +422,7 @@ class HeatCoordinator(DataUpdateCoordinator):
             if self.closed:
                 return
             await self.process_pump_events()
+            await self.process_pump_manual_events()
             cfg = {"settings": self.settings, "rooms": self.config["rooms"]}
             self.snapshot = self.build_snapshot()
             decision = self.engine.evaluate(cfg, self.snapshot, self.runtime)
@@ -446,6 +488,58 @@ class HeatCoordinator(DataUpdateCoordinator):
             "until": (dt_util.utcnow() + timedelta(minutes=self.settings["override_minutes"])).isoformat(),
         }
         await self.save()
+
+    @property
+    def pump_manual_target(self):
+        item = self.runtime["overrides"].get("pump_target", {})
+        if not isinstance(item, dict) or item.get("entity_id") != self.settings["pump_entity"]:
+            return None
+        return self.override("pump_target")
+
+    def pump_manual_item(self, value, now):
+        return {
+            "value": value,
+            "until": (now + timedelta(minutes=self.settings["override_minutes"])).isoformat(),
+            "entity_id": self.settings["pump_entity"],
+            "source": "pump_ui",
+        }
+
+    async def set_pump_manual(self, value):
+        try:
+            value = pump_target_value(self.transport.state(self.settings["pump_entity"]), float(value))
+        except (TypeError, ValueError) as err:
+            raise HomeAssistantError(f"Consigne PAC incompatible : {err}") from err
+        self.runtime["overrides"]["pump_target"] = self.pump_manual_item(value, dt_util.utcnow())
+        await self.store.async_save(self.runtime)
+        await self.async_evaluate()
+
+    async def process_pump_manual_events(self):
+        events, self.pump_manual_events = self.pump_manual_events, []
+        if not events:
+            return
+        # A call_service event precedes entity permission checks in HA. Never
+        # turn an unauthorized request into an integration-owned command.
+        for value, now, user_id in reversed(events):
+            user = await self.hass.auth.async_get_user(user_id)
+            if user and user.is_active and user.permissions.check_entity(self.settings["pump_entity"], POLICY_CONTROL):
+                break
+        else:
+            return
+        if self.closed:
+            return
+        self.runtime["overrides"]["pump_target"] = self.pump_manual_item(value, now)
+        entity = self.settings["pump_entity"]
+        command = Command(entity, "set_temperature", "temperature", value, "temperature", 0.01)
+        # Supersede a previous automatic intent, not a latched fault. The user's
+        # service is already executing; do not duplicate it while waiting for LG.
+        self.controller.pending.pop(command.key, None)
+        state = self.transport.state(entity)
+        if self.armed and state is not None and state.state == self.settings["pump_mode"]:
+            self.controller.last_sent[command.key] = now
+            if not command.matches(state):
+                self.controller.pending[command.key] = Pending(command, now)
+        await self.checkpoint_control()
+        await self.store.async_save(self.runtime)
 
     async def clear_override(self, key):
         self.runtime["overrides"].pop(key, None)

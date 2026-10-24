@@ -1,4 +1,16 @@
-# Smart Heat Manager — 0.5.1
+# Smart Heat Manager — 0.6.0
+
+Depuis 0.6.0, les boutons +/- de la carte native PAC créent une dérogation
+temporaire **PAC uniquement** pour la durée configurée. Le sélecteur **Mode PAC
+temporaire** affiche Manuel et permet le retour immédiat à Automatique, sans
+effacer les dérogations des pièces. Les thermostats SHM des pièces gardent chacun
+leur propre consigne manuelle. Aucun de ces réglages ne passe toute la maison en manuel.
+
+La détection PAC porte sur les appels HA `climate.set_temperature` d'un utilisateur
+authentifié autorisé à commander la PAC. Les retours cloud, valeurs restaurées,
+commandes SHM et automatismes sans utilisateur ne créent pas de dérogation.
+La modification d'une consigne seule ne contourne pas Tempo et n'autorise pas
+une remise en marche ; les protections et l'armement restent inchangés.
 
 Correctif 0.5.1 : un ordre de tête non confirmé ne fige plus les consignes de la
 PAC autonome. Le défaut reste visible et verrouillé, et toutes les commandes des

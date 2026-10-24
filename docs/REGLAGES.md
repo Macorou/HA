@@ -116,6 +116,30 @@ Il ne s'agit jamais d'une consigne directe de puissance compresseur.
 
 ## PAC autonome et défauts
 
+### Consignes manuelles indépendantes (0.6.0)
+
+Les +/- d'un thermostat **SHM** de pièce activent déjà son propre préréglage
+Manuel. La consigne n'affecte que cette pièce. Le préréglage Automatique de cette
+pièce efface uniquement sa dérogation.
+
+Les +/- de la carte **native PAC** dans HA activent désormais **Mode PAC
+temporaire : Manuel**, avec la température choisie, sans changer le mode général
+ni les consignes des pièces. Le sélecteur PAC Automatique efface seulement la
+dérogation PAC. Chaque changement utilisateur redémarre son propre délai, réglé
+par **Durée des dérogations**. La dernière valeur de clics successifs est retenue.
+Le délai et la cible survivent à un rechargement/redémarrage sans être prolongés.
+
+La détection vise les demandes `climate.set_temperature` dans HA portant
+explicitement sur l'entité PAC, par un utilisateur authentifié ayant le droit de
+la commander. Un retour cloud, une valeur restaurée ou une commande automatique
+sans utilisateur ne vaut pas action manuelle. Une molette physique hors HA n'est
+pas prise en charge par cette détection. La consigne manuelle n'autorise ni marche
+ni dérogation Tempo : le rouge confirmé et les protections gardent leur priorité ;
+le repli Tempo inconnu reste un plafond. Le mode général Automatique reste un
+retour global qui efface toutes les dérogations, comme auparavant.
+
+### Politique native
+
 Hors exception Tempo documentée ci-dessus, la PAC reçoit seulement `set_temperature`.
 Le transport interdit toute commande de mode sans autorisation Tempo ponctuelle
 et propriété confirmée pour la reprise. Un arrêt manuel n'est pas repris par

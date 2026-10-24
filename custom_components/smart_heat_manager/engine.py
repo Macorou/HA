@@ -1,5 +1,7 @@
 """Explicit state arbitration. No Home Assistant dependency and no I/O."""
 
+from math import isfinite
+
 from .const import PUMP_MODE_TARGETS
 from .models import Decision, Snapshot, active_override
 from .night import night_active
@@ -67,6 +69,15 @@ class Engine:
                 result.demand, result.opening, result.reason = False, 0, "tempo_blocked"
             rooms[rid] = result
         faults = []
+        pump_manual = None
+        pump_item = overrides.get("pump_target", {})
+        if isinstance(pump_item, dict) and pump_item.get("entity_id") == cfg["pump_entity"]:
+            pump_manual = active_override(overrides, "pump_target", now)
+            if pump_manual is not None and (
+                isinstance(pump_manual, bool) or not isinstance(pump_manual, (int, float)) or not isfinite(pump_manual)
+            ):
+                faults.append("invalid_pump_override")
+                pump_manual = None
         if not snapshot.pump_available:
             faults.append("pump_unavailable")
         if not snapshot.actuators_available:
@@ -120,6 +131,11 @@ class Engine:
                 pump_target = max(pump_target, min(cfg["pump_solar_target"], pump_target + cfg["preheat_delta"]))
             if force:
                 pump_target = max(pump_target, cfg["pump_normal_target"])
+            if pump_manual is not None:
+                # A PAC-only hold never changes room profiles, gains or demand.
+                pump_target = pump_manual
+                if state == "tempo_blocked":
+                    pump_target = min(pump_target, cfg["pump_tempo_target"])
         return Decision(
             state,
             reason,
@@ -136,4 +152,5 @@ class Engine:
             pump_target,
             tempo_stop,
             red_window_end(today, now, cfg["tempo_enabled"]),
+            "manual" if pump_manual is not None else mode,
         )

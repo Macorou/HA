@@ -111,6 +111,52 @@ class PumpTargetTests(unittest.TestCase):
         runtime["overrides"]["force"] = {"value": True, "until": (self.now + timedelta(hours=1)).isoformat()}
         self.assertEqual(Engine().evaluate(self.cfg, snap, runtime).pump_target, 21)
 
+    def manual_runtime(self, target=23, entity="climate.pump"):
+        return {
+            "overrides": {
+                "pump_target": {
+                    "value": target,
+                    "entity_id": entity,
+                    "until": (self.now + timedelta(hours=1)).isoformat(),
+                }
+            }
+        }
+
+    def test_direct_manual_pump_target_never_changes_room_profile_or_target(self):
+        snap = Snapshot(self.now, {"living": 19})
+        result = Engine().evaluate(self.cfg, snap, self.manual_runtime())
+        self.assertEqual(result.mode, "present")
+        self.assertEqual(result.pump_profile, "manual")
+        self.assertEqual(result.pump_target, 23)
+        self.assertEqual(result.rooms["living"].target, 20)
+
+    def test_manual_pump_is_scoped_to_entity_and_fixed_expiry(self):
+        snap = Snapshot(self.now, {"living": 19})
+        runtime = self.manual_runtime(entity="climate.old_pump")
+        self.assertEqual(Engine().evaluate(self.cfg, snap, runtime).pump_target, 21)
+        runtime = self.manual_runtime()
+        snap.now += timedelta(hours=1)
+        self.assertEqual(Engine().evaluate(self.cfg, snap, runtime).pump_target, 21)
+
+    def test_manual_pump_does_not_bypass_red_stop_unknown_cap_pause_or_protection(self):
+        self.cfg["settings"].update(tempo_enabled=True, tempo_today_entity="sensor.tempo")
+        runtime = self.manual_runtime()
+        red = Engine().evaluate(self.cfg, Snapshot(self.now, {"living": 19}, today="red"), runtime)
+        self.assertIsNone(red.pump_target)
+        self.assertTrue(red.pump_tempo_stop)
+        unknown = Engine().evaluate(self.cfg, Snapshot(self.now, {"living": 19}), runtime)
+        self.assertEqual(unknown.pump_target, 18)
+        protected = Engine().evaluate(self.cfg, Snapshot(self.now, {"living": 19}, protection=True), runtime)
+        self.assertIsNone(protected.pump_target)
+        runtime["automation_enabled"] = False
+        self.assertIsNone(Engine().evaluate(self.cfg, Snapshot(self.now, {"living": 19}), runtime).pump_target)
+
+    def test_invalid_manual_pump_value_suspends_instead_of_raising(self):
+        for target in ("bad", True, float("nan"), float("inf"), {}):
+            result = Engine().evaluate(self.cfg, Snapshot(self.now, {"living": 19}), self.manual_runtime(target))
+            self.assertIn("invalid_pump_override", result.faults)
+            self.assertIsNone(result.pump_target)
+
 
 if __name__ == "__main__":
     unittest.main()
